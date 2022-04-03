@@ -5,19 +5,13 @@ import seaborn as sns
 
 from kneed import KneeLocator
 from matplotlib.gridspec import GridSpec
+
 from table_utils import *
+from ..utils import *
 
 sns.set_style('whitegrid')
 
 __types__ = ['cumulative', 'ratio', 'normalized']
-
-
-def _savefig(output_path=None, savefig_kws=None):
-    if output_path is not None:
-        if savefig_kws is not None:
-            plt.savefig(output_path, **savefig_kws)
-        else:
-            plt.savefig(output_path, format='jpg', bbox_inches='tight', dpi=300)
 
 
 def get_axis(i, axs, ncols, nrows):
@@ -72,18 +66,8 @@ def _plot_explained_var_ratio(explained_variance_ratio, kl, ax):
 
 
 def _plot_normalized_explained_var(explained_variance_ratio, kl, ax):
-    n_components = len(explained_variance_ratio)
-
-    ax.plot(kl.y_normalized, color='#332288', label='')
-    ax.plot(kl.y_difference, color='#008695', label='Difference curve')
-
-    ax.axvline(kl.knee, linestyle='--', linewidth=1, color='#E73F74', label=f'Optimal number of components')
-    ax.set_xticks(np.append(ax.get_xticks()[1:-1], [kl.knee]))
-    ax.set_xlim(-n_components * 0.02, n_components * 1.02)
-
-    ax.set_xlabel('Number of components', fontsize=13, labelpad=15)
-    ax.set_ylabel('Normalized explained variance curve', fontsize=13, labelpad=8)
-    ax.legend(fontsize=12, labelspacing=0.5)
+    plot_optimal_normalized_elbow(explained_variance_ratio, kl, ax, optimal_label='Optimal number of components',
+                                  xlabel='Number of components', ylabel='Normalized explained variance curve')
 
 
 def plot_explained_variance(explained_variance_ratio, thres=0.5, plots='all', output_path=None, savefig_kws=None):
@@ -135,7 +119,7 @@ def plot_explained_variance(explained_variance_ratio, thres=0.5, plots='all', ou
         i += 1
 
     plt.tight_layout(pad=2)
-    _savefig(output_path=output_path, savefig_kws=savefig_kws)
+    savefig(output_path=output_path, savefig_kws=savefig_kws)
 
 
 def plot_num_main_contributors(df, df_trans, thres=0.5, n_contributors=5, dim_idx=None, output_path=None,
@@ -202,7 +186,7 @@ def plot_num_main_contributors(df, df_trans, thres=0.5, n_contributors=5, dim_id
         i += 1
 
     fig.tight_layout(pad=2)
-    _savefig(output_path=output_path, savefig_kws=savefig_kws)
+    savefig(output_path=output_path, savefig_kws=savefig_kws)
 
 
 def plot_cat_main_contributor_distribution(df, df_trans, thres=0.14, n_contributors=None, dim_idx=None,
@@ -275,7 +259,7 @@ def plot_cat_main_contributor_distribution(df, df_trans, thres=0.14, n_contribut
     sns.despine(fig)
     fig.supylabel('Density functions', fontsize=13, x=0.01)
     fig.tight_layout(w_pad=3)
-    _savefig(output_path=output_path, savefig_kws=savefig_kws)
+    savefig(output_path=output_path, savefig_kws=savefig_kws)
 
 
 def plot_cumulative_explained_var_comparison(explained_variance_ratio1, explained_variance_ratio2, name1=None,
@@ -314,4 +298,4 @@ def plot_cumulative_explained_var_comparison(explained_variance_ratio1, explaine
     ax.set_xlabel('Number of components', fontsize=13, labelpad=15)
     ax.legend(fontsize=12, labelspacing=0.5)
     fig.tight_layout(w_pad=2)
-    _savefig(output_path=output_path, savefig_kws=savefig_kws)
+    savefig(output_path=output_path, savefig_kws=savefig_kws)

@@ -55,22 +55,24 @@ class DimensionalityReduction(base.BaseEstimator, base.TransformerMixin):
         self.cat_trans = None
         self.num_components = None
         self.cat_components = None
+        self.num_kwargs = {} if num_kwargs is None else num_kwargs
+        self.cat_kwargs = {} if cat_kwargs is None else cat_kwargs
 
         # Regardless of the algorithm selected for numerical variables, PCA is used as reference algorithm
         self.pca = PCA()
 
         self.num_model = None
         if self.num_algorithm == 'pca':
-            self.num_model = PCA(n_components=n_components, random_state=42, **num_kwargs)
+            self.num_model = PCA(n_components=n_components, random_state=42, **self.num_kwargs)
         elif self.num_algorithm in ['spca', 'sparsepca']:
-            self.num_model = SparsePCA(n_components=n_components, random_state=42, **num_kwargs)
+            self.num_model = SparsePCA(n_components=n_components, random_state=42, **self.num_kwargs)
         else:
             raise RuntimeError('''An error occurred while initializing the algorithm.
                                Check the algorithm name for numerical variables.''')
 
         self.cat_model = None
         if self.cat_algorithm == 'mca':
-            self.cat_model = prince.MCA(n_components=n_components, n_iter=10, random_state=42, **cat_kwargs)
+            self.cat_model = prince.MCA(n_components=n_components, n_iter=10, random_state=42, **self.cat_kwargs)
         else:
             raise RuntimeError('''An error occurred while initializing the algorithm.
                                Check the algorithm name for categorical variables.''')
