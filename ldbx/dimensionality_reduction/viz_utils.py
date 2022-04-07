@@ -14,17 +14,6 @@ sns.set_style('whitegrid')
 __types__ = ['cumulative', 'ratio', 'normalized']
 
 
-def get_axis(i, axs, ncols, nrows):
-    ax = None
-    if ncols > 1 and nrows > 1:
-        ax = axs[i // ncols, i % ncols]
-    elif ncols == 1 and nrows == 1:
-        ax = axs
-    else:
-        ax = axs[i]
-    return ax
-
-
 def _plot_cumulative_explained_var(explained_variance_ratio, kl, thres, ax):
     n_components = len(explained_variance_ratio)
 

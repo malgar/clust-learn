@@ -6,6 +6,17 @@ import numpy as np
 from matplotlib.ticker import MaxNLocator
 
 
+def get_axis(i, axs, ncols, nrows):
+    ax = None
+    if ncols > 1 and nrows > 1:
+        ax = axs[i // ncols, i % ncols]
+    elif ncols == 1 and nrows == 1:
+        ax = axs
+    else:
+        ax = axs[i]
+    return ax
+
+
 def savefig(output_path=None, savefig_kws=None):
     if output_path is not None:
         if savefig_kws is not None:
