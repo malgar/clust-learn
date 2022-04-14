@@ -4,7 +4,6 @@
 import pandas as pd
 import statsmodels.api as sm
 
-from kneed import KneeLocator
 from scipy.stats import chi2_contingency
 from sklearn import base
 from sklearn.cluster import AgglomerativeClustering, KMeans
