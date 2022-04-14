@@ -17,6 +17,23 @@ CARTO_COLORS = ['#7F3C8D', '#11A579', '#3969AC', '#F2B701', '#E73F74', '#80BA5A'
 
 def plot_score_comparison(scores, cluster_range, metric_name='Weighted sum of squared distances', output_path=None,
                           savefig_kws=None):
+    """
+    Plots the comparison in performance between the different clustering algorithms.
+
+    Parameters
+    ----------
+    scores : dict
+        Dictionary <algorithm, list of scores>
+    cluster_range : [min (int), max (int))
+        Range of number of clusters computed. This will be displayed on the x-axis.
+    metric_name: str, default='Weighted sum of squared distances'
+        Name of the metric used for comparison. This will be displayed on the y-label.
+        Default is 'Weighted sum of squared distances', which corresponds to inertia.
+    output_path: str, default=None
+        Path to save figure as image.
+    savefig_kws: dict, default=None
+        Save figure options.
+    """
     plt.figure(figsize=(10, 5))
     i = 0
     for algorithm in scores:
@@ -33,6 +50,23 @@ def plot_score_comparison(scores, cluster_range, metric_name='Weighted sum of sq
 
 
 def plot_optimal_components_normalized(scores, max_clusters, metric_name, output_path=None, savefig_kws=None):
+    """
+    Plots the normalized curve used for computing the optimal number of clusters.
+
+    Parameters
+    ----------
+    scores : dict
+        Dictionary <algorithm, list of scores>
+    max_clusters : int
+        Maximum number of clusters allowed.
+    metric_name: str, default='Weighted sum of squared distances'
+        Name of the metric used for comparison. This will be displayed on the y-label.
+        Default is 'Weighted sum of squared distances', which corresponds to inertia.
+    output_path: str, default=None
+        Path to save figure as image.
+    savefig_kws: dict, default=None
+        Save figure options.
+    """
     fig, ax = plt.subplots(figsize=(8, 5))
     kl = KneeLocator(x=range(1, max_clusters + 1), y=scores, curve='convex', direction='decreasing')
     plot_optimal_normalized_elbow(scores, kl, ax, optimal_label='Optimal number of clusters',
@@ -41,6 +75,18 @@ def plot_optimal_components_normalized(scores, max_clusters, metric_name, output
 
 
 def plot_clustercount(df, output_path=None, savefig_kws=None):
+    """
+    Plots a bar plot with cluster counts.
+
+    Parameters
+    ----------
+    df : `pandas.DataFrame`
+        DataFrame containing at least a column named 'cluster_cat' with the cluster labels.
+    output_path: str, default=None
+        Path to save figure as image.
+    savefig_kws: dict, default=None
+        Save figure options.
+    """
     plt.figure(figsize=(df['cluster_cat'].nunique(), 5))
     sns.countplot(x='cluster_cat', data=df, color='#332288', alpha=0.9, order=np.sort(df['cluster_cat'].unique()))
     plt.xticks(rotation=30)
@@ -50,12 +96,33 @@ def plot_clustercount(df, output_path=None, savefig_kws=None):
     savefig(output_path=output_path, savefig_kws=savefig_kws)
 
 
-def plot_cluster_means_to_global_means_comparison(df, dimensions, xlabel=None, ylabel=None, output_path=None,
-                                                  savefig_kws=None):
+def plot_cluster_means_to_global_means_comparison(df, dimensions, xlabel=None, ylabel=None,
+                                                  levels=[-0.50, -0.32, -0.17, -0.05, 0.05, 0.17, 0.32, 0.50],
+                                                  output_path=None, savefig_kws=None):
+    """
+    Plots the normalized curve used for computing the optimal number of clusters.
+
+    Parameters
+    ----------
+    df : `pandas.DataFrame`
+        DataFrame containing the variables used for clustering.
+    dimensions : list
+        List of variables of interest.
+        *Note these must be internal variables, ie, variables used for clustering*
+    xlabel : str, default=None
+        x-label name/description.
+    ylabel : str, default=None
+        y-label name/description.
+    levels : list or `numpy.array`
+        Values to be used as cuts for color intensity.
+        Default values: [-0.50, -0.32, -0.17, -0.05, 0.05, 0.17, 0.32, 0.50]
+    output_path: str, default=None
+        Path to save figure as image.
+    savefig_kws: dict, default=None
+        Save figure options.
+    """
     df_diff = compare_cluster_means_to_global_means(df, dimensions)
     colors = sns.color_palette("BrBG", n_colors=9)
-    # TODO: These cuts should be passed with some default values
-    levels = [-0.50, -0.32, -0.17, -0.05, 0.05, 0.17, 0.32, 0.50]
     cmap, norm = matplotlib.colors.from_levels_and_colors(levels, colors, extend="both")
     fig, ax = plt.subplots(figsize=(20, 8))
     im = ax.imshow(df_diff[dimensions].values, cmap=cmap, norm=norm)
@@ -85,7 +152,26 @@ def plot_cluster_means_to_global_means_comparison(df, dimensions, xlabel=None, y
 
 def plot_distribution_comparison_by_cluster(df, cluster_labels, xlabel=None, ylabel=None, output_path=None,
                                             savefig_kws=None):
+    """
+    Plots the violin plots per cluster and *continuous* variables of interest to understand differences in their
+    distributions by cluster.
 
+    Parameters
+    ----------
+    df : `pandas.DataFrame`
+        DataFrame containing the variables used for clustering.
+    cluster_labels : `numpy.array` or list
+        Array with cluster labels.
+        *Note this array should have the same length as df and observations be in the same order*.
+    xlabel : str, default=None
+        x-label name/description.
+    ylabel : str, default=None
+        y-label name/description.
+    output_path: str, default=None
+        Path to save figure as image.
+    savefig_kws: dict, default=None
+        Save figure options.
+    """
     nclusters = len(np.unique(cluster_labels))
     nvars = df.shape[0]
     ncols = max(1, min(nvars, 18//nclusters))
@@ -114,7 +200,33 @@ def plot_distribution_comparison_by_cluster(df, cluster_labels, xlabel=None, yla
 
 
 def plot_clusters_2D(x, y, hue, df, style_kwargs=dict(), output_path=None, savefig_kws=None):
+    """
+    Plots two 2D plots:
+     - A scatter plot styled by the categorical variable `hue`.
+     - A 2D plot comparing cluster centroids and optionally the density area.
 
+    Parameters
+    ----------
+    x : `numpy.array` or list
+        x-coordinate data.
+    y : `numpy.array` or list
+        y-coordinate data.
+    hue : `numpy.array` or list
+        Array with categorical values to be used for color styling.
+    df : `pandas.DataFrame`
+        DataFrame containing the data.
+    style_kwargs : dict, default=empty dict
+        Dictionary with optional styling parameters.
+        List of parameters:
+         - palette : matplotlib palette to be used. default='gnuplot'
+         - vline_color : color to be used for vertical line (used for plotting x mean value). default='#11A579'
+         - hline_color : color to be used for horizontal line (used for plotting y mean value). default='#332288'
+         - kdeplot : boolean to display density area of points (using seabonr.kdeplot). default=True
+    output_path: str, default=None
+        Path to save figure as image.
+    savefig_kws: dict, default=None
+        Save figure options.
+    """
     # Style params
     palette = 'gnuplot'
     if style_kwargs.get('palette'):
@@ -169,9 +281,23 @@ def plot_clusters_2D(x, y, hue, df, style_kwargs=dict(), output_path=None, savef
     savefig(output_path=output_path, savefig_kws=savefig_kws)
 
 
-# TODO: ct contingency table as a DataFrame
 def plot_cat_distribution_by_cluster(ct, cat_label=None, cluster_label=None, output_path=None, savefig_kws=None):
+    """
+    Plots the relative contingency table of the clusters with a categorical variable as a stacked bar plot.
 
+    Parameters
+    ----------
+    ct : `pandas.DataFrame`
+        DataFrame with the relative contingency table.
+    cat_label : str, default=None
+        Name/Description of the categorical variable to be displayed.
+    cluster_label : str, default=None
+        Name/Description of the cluster variable to be displayed.
+    output_path: str, default=None
+        Path to save figure as image.
+    savefig_kws: dict, default=None
+        Save figure options.
+    """
     plt.figure(figsize=(11, 0.625 * len(ct.index)))
     colors = sns.color_palette("YlGnBu", n_colors=len(ct.columns))
     left = np.array([0] * len(ct.index))
