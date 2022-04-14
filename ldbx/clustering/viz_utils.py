@@ -40,6 +40,16 @@ def plot_optimal_components_normalized(scores, max_clusters, metric_name, output
     savefig(output_path=output_path, savefig_kws=savefig_kws)
 
 
+def plot_clustercount(df, output_path=None, savefig_kws=None):
+    plt.figure(figsize=(df['cluster_cat'].nunique(), 5))
+    sns.countplot(x='cluster_cat', data=df, color='#332288', alpha=0.9, order=np.sort(df['cluster_cat'].unique()))
+    plt.xticks(rotation=30)
+    plt.ylabel('count', fontsize=12, labelpad=10)
+    plt.xlabel('clusters', fontsize=12, labelpad=10)
+    plt.tight_layout(pad=2)
+    savefig(output_path=output_path, savefig_kws=savefig_kws)
+
+
 def plot_cluster_means_to_global_means_comparison(df, dimensions, xlabel=None, ylabel=None, output_path=None,
                                                   savefig_kws=None):
     df_diff = compare_cluster_means_to_global_means(df, dimensions)
@@ -156,4 +166,45 @@ def plot_clusters_2D(x, y, hue, df, style_kwargs=dict(), output_path=None, savef
                   loc=(0.93, 0.5 - 0.167 * (df[hue].nunique() // 4)))
 
     fig.tight_layout(pad=2)
+    savefig(output_path=output_path, savefig_kws=savefig_kws)
+
+
+# TODO: ct contingency table as a DataFrame
+def plot_cat_distribution_by_cluster(ct, cat_label=None, cluster_label=None, output_path=None, savefig_kws=None):
+
+    plt.figure(figsize=(11, 0.625 * len(ct.index)))
+    colors = sns.color_palette("YlGnBu", n_colors=len(ct.columns))
+    left = np.array([0] * len(ct.index))
+
+    i = 0
+    for col in ct.columns:
+        widths = ct[col].values
+        plt.barh(ct.index, widths, left=left, label=col, color=colors[i], height=0.7)
+
+        xcenters = left + widths / 2
+        for y, (x, w) in enumerate(zip(xcenters, widths)):
+            if w > 0.05:
+                color = '#737373' if i < 2 else '#d9d9d9'
+                plt.text(x, y, f'{str(np.round(w * 100, 1))}%', ha='center', va='center', color=color, fontsize=12,
+                         weight='light')
+
+        left = left + ct[col].values
+        i += 1
+
+    ncol = 5
+    if len(ct.columns) % ncol > 0:
+        if len(ct.columns) % 6 == 0:
+            ncol = 6
+        elif len(ct.columns) % 4 == 0:
+            ncol = 4
+
+    plt.gca().invert_yaxis()
+    plt.legend(ncol=ncol, loc='lower center', bbox_to_anchor=(0.5, 1), fontsize=12, title=cat_label,
+               title_fontsize=13)
+    plt.ylabel(cluster_label, fontsize=12, weight='bold', labelpad=15)
+    plt.yticks(ticks=range(len(ct.index)), labels=list(ct.index), fontsize=11)
+    plt.xticks([])
+    plt.xlim(0, 1)
+
+    plt.tight_layout()
     savefig(output_path=output_path, savefig_kws=savefig_kws)

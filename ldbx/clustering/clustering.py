@@ -5,6 +5,7 @@ import pandas as pd
 import statsmodels.api as sm
 
 from kneed import KneeLocator
+from scipy.stats import chi2_contingency
 from sklearn import base
 from sklearn.cluster import AgglomerativeClustering, KMeans
 from sklearn.metrics import davies_bouldin_score, silhouette_score
@@ -148,6 +149,22 @@ class Clustering(base.BaseEstimator, base.TransformerMixin):
 
         return res
 
+    def describe_clusters_cat(self, cat_array, cat_name=None, order=None, normalize=False, output_path=None):
+        freq = pd.crosstab(index=self.df['cluster_cat'], columns=cat_array, rownames=['Clusters'], colnames=[cat_name])
+        if order is not None:
+            freq = freq[order]
+
+        if normalize:
+            freq['total'] = freq.sum(1)
+            for col in freq.columns[:-1]:
+                freq[col] = freq[col] / freq['total']
+            freq = freq.drop(columns='total')
+
+        if output_path is not None:
+            freq.to_csv(output_path, index=False)
+
+        return freq
+
     def compare_cluster_means_to_global_means(self, output_path=None):
         df_agg = self.df.groupby('cluster_cat')[[self.dimensions]].mean()
         df_agg_diff = df_agg.copy()
@@ -196,6 +213,11 @@ class Clustering(base.BaseEstimator, base.TransformerMixin):
 
         return res
 
+    def chi2_test(self, cat_array):
+        contingency_t = self.describe_clusters_cat(cat_array)
+        test_res = chi2_contingency(contingency_t.values)
+        return test_res[:-1]
+
     def plot_score_comparison(self, output_path=None, savefig_kws=None):
         metric_name = METRIC_NAMES[self.metric]
 
@@ -215,6 +237,9 @@ class Clustering(base.BaseEstimator, base.TransformerMixin):
                                                output_path, savefig_kws)
         else:
             raise RuntimeError('This plot can only be used when `cluster_range` contains at least 2 values')
+
+    def plot_clustercount(self, output_path=None, savefig_kws=None):
+        plot_clustercount(self.df, output_path, savefig_kws)
 
     def plot_cluster_means_to_global_means_comparison(self, xlabel=None, ylabel=None, output_path=None,
                                                       savefig_kws=None):
@@ -236,3 +261,8 @@ class Clustering(base.BaseEstimator, base.TransformerMixin):
             coor2 = self.dimensions[coor2]
         hue = 'cluster_cat'
         plot_clusters_2D(coor1, coor2, hue, self.df, style_kwargs=dict(), output_path=None, savefig_kws=None)
+
+    def plot_cat_distribution_by_cluster(self, cat_array, cat_label=None, cluster_label=None, output_path=None,
+                                         savefig_kws=None):
+        ct = self.describe_clusters_cat(cat_array, normalize=True)
+        plot_cat_distribution_by_cluster(ct, cat_label, cluster_label, output_path, savefig_kws)
