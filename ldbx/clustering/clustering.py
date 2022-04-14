@@ -1,10 +1,14 @@
 """Clustering with KMeans++ as default algorithm"""
 # Author: Miguel Alvarez
 
+import pandas as pd
+import statsmodels.api as sm
+
 from kneed import KneeLocator
 from sklearn import base
 from sklearn.cluster import AgglomerativeClustering, KMeans
 from sklearn.metrics import davies_bouldin_score, silhouette_score
+from statsmodels.formula.api import ols
 from utils import *
 from viz_utils import *
 
@@ -116,21 +120,81 @@ class Clustering(base.BaseEstimator, base.TransformerMixin):
 
         return self.labels_
 
-    def describe_clusters(self, statistic='mean'):
-        return self.df.groupby('cluster_cat')[self.dimensions].agg(statistic).reset_index()
+    def describe_clusters(self, df_ext=None, variables=None, cluster_labels=None, statistics=['mean', 'median', 'std'],
+                          output_path=None):
+        if df_ext is not None:
+            df_ext['cluster'] = self.labels_
+        else:
+            df_ext = self.df[self.dimensions + ['cluster']]
 
-    def compare_cluster_means_to_global_means(self):
+        if variables is not None:
+            if not isinstance(variables, list):
+                variables = [variables]
+            df_ext = df_ext[variables + ['cluster']]
+        else:
+            variables = df_ext.columns.to_list()
+            variables.remove('cluster')
+
+        if cluster_labels is None:
+            cluster_labels = df_ext['cluster'].unique()
+        if not isinstance(cluster_labels, list):
+            cluster_labels = [cluster_labels]
+
+        res = df_ext[df_ext['cluster'].isin(cluster_labels)].groupby('cluster').agg(
+            dict(zip(list(variables), [statistics] * len(variables)))).reset_index()
+
+        if output_path is not None:
+            res.to_csv(output_path, index=False)
+
+        return res
+
+    def compare_cluster_means_to_global_means(self, output_path=None):
         df_agg = self.df.groupby('cluster_cat')[[self.dimensions]].mean()
         df_agg_diff = df_agg.copy()
         mean_array = self.df[self.dimensions].mean().values
         for idx, row in df_agg.iterrows():
             df_agg_diff.loc[idx, self.dimensions] = (row[self.dimensions] - mean_array) / mean_array
         df_agg_diff = df_agg_diff.reset_index()
+
+        if output_path is not None:
+            df_agg_diff.to_csv(output_path, index=False)
+
         return df_agg_diff
 
-    def anova_tests(self):
-        # TODO
-        pass
+    # TODO This allows for internal and external use
+    # TODO: vars_test can be str or list, same as cluster_labels
+    def anova_tests(self, df_test=None, vars_test=None, cluster_labels=None, output_path=None):
+        if df_test is not None:
+            df_test['cluster'] = self.labels_
+        else:
+            df_test = self.df[self.dimensions + ['cluster']]
+
+        if vars_test is not None:
+            if not isinstance(vars_test, list):
+                vars_test = [vars_test]
+            df_test = df_test[vars_test + ['cluster']]
+
+        if cluster_labels is None:
+            cluster_labels = df_test['cluster'].unique()
+        if not isinstance(cluster_labels, list):
+            cluster_labels = [cluster_labels]
+
+        res = []
+        col_names = []
+        variables = df_test.columns.to_list()
+        variables.remove('cluster')
+        for var in variables:
+            model = ols(f'{var} ~ C(cluster)', data=df_test[df_test['cluster'].isin(cluster_labels)]).fit()
+            aov_table = sm.stats.anova_lm(model, typ=1)
+            res.append([var] + aov_table.iloc[0].to_list())
+            if len(col_names) == 0:
+                col_names = ['var_name'] + aov_table.columns.tolist()
+
+        res = pd.DataFrame(res, columns=col_names)
+        if output_path is not None:
+            res.to_csv(output_path, index=False)
+
+        return res
 
     def plot_score_comparison(self, output_path=None, savefig_kws=None):
         metric_name = METRIC_NAMES[self.metric]
@@ -143,11 +207,12 @@ class Clustering(base.BaseEstimator, base.TransformerMixin):
 
         plot_score_comparison(self.scores, cluster_range, metric_name, output_path, savefig_kws)
 
-    def plot_optimal_components_normalized(self):
+    def plot_optimal_components_normalized(self, output_path=None, savefig_kws=None):
         if len(self.scores[self.optimal_config[0]]) > 1:
             plot_optimal_components_normalized(self.scores[self.optimal_config[0]],
                                                len(self.scores[self.optimal_config[0]]),
-                                               METRIC_NAMES[self.metric])
+                                               METRIC_NAMES[self.metric],
+                                               output_path, savefig_kws)
         else:
             raise RuntimeError('This plot can only be used when `cluster_range` contains at least 2 values')
 
@@ -155,3 +220,19 @@ class Clustering(base.BaseEstimator, base.TransformerMixin):
                                                       savefig_kws=None):
         plot_cluster_means_to_global_means_comparison(self.df, self.dimensions, xlabel, ylabel, output_path,
                                                       savefig_kws)
+
+    # TODO: df_ext in case we'd like to compare against external variables
+    def plot_distribution_comparison_by_cluster(self, df_ext=None, xlabel=None, ylabel=None, output_path=None,
+                                                savefig_kws=None):
+        if df_ext is None:
+            df_ext = self.df[self.dimensions]
+        plot_distribution_comparison_by_cluster(df_ext, self.labels_, xlabel, ylabel, output_path, savefig_kws)
+
+    # TODO: coor1 and coor2 can be integer or str. Be careful when documenting
+    def plot_clusters_2D(self, coor1, coor2, style_kwargs=dict(), output_path=None, savefig_kws=None):
+        if isinstance(coor1, int):
+            coor1 = self.dimensions[coor1]
+        if isinstance(coor2, int):
+            coor2 = self.dimensions[coor2]
+        hue = 'cluster_cat'
+        plot_clusters_2D(coor1, coor2, hue, self.df, style_kwargs=dict(), output_path=None, savefig_kws=None)

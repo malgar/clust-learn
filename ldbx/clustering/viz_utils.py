@@ -32,11 +32,12 @@ def plot_score_comparison(scores, cluster_range, metric_name='Weighted sum of sq
     savefig(output_path=output_path, savefig_kws=savefig_kws)
 
 
-def plot_optimal_components_normalized(scores, max_clusters, metric_name):
+def plot_optimal_components_normalized(scores, max_clusters, metric_name, output_path=None, savefig_kws=None):
     fig, ax = plt.subplots(figsize=(8, 5))
     kl = KneeLocator(x=range(1, max_clusters + 1), y=scores, curve='convex', direction='decreasing')
     plot_optimal_normalized_elbow(scores, kl, ax, optimal_label='Optimal number of clusters',
                                   xlabel='Number of clusters', ylabel=f'Normalized {metric_name}')
+    savefig(output_path=output_path, savefig_kws=savefig_kws)
 
 
 def plot_cluster_means_to_global_means_comparison(df, dimensions, xlabel=None, ylabel=None, output_path=None,
@@ -72,7 +73,6 @@ def plot_cluster_means_to_global_means_comparison(df, dimensions, xlabel=None, y
     savefig(output_path=output_path, savefig_kws=savefig_kws)
 
 
-# TODO: Make corresponding calls from main clustering class
 def plot_distribution_comparison_by_cluster(df, cluster_labels, xlabel=None, ylabel=None, output_path=None,
                                             savefig_kws=None):
 
@@ -100,4 +100,60 @@ def plot_distribution_comparison_by_cluster(df, cluster_labels, xlabel=None, yla
         i += 1
 
     fig.tight_layout()
+    savefig(output_path=output_path, savefig_kws=savefig_kws)
+
+
+def plot_clusters_2D(x, y, hue, df, style_kwargs=dict(), output_path=None, savefig_kws=None):
+
+    # Style params
+    palette = 'gnuplot'
+    if style_kwargs.get('palette'):
+        palette = style_kwargs.get('palette')
+
+    vline_color = '#11A579'
+    if style_kwargs.get('vline_color'):
+        vline_color = style_kwargs.get('vline_color')
+
+    hline_color = '#332288'
+    if style_kwargs.get('hline_color'):
+        vline_color = style_kwargs.get('hline_color')
+
+    kdeplot = True
+    if style_kwargs.get('kdeplot') is not None:
+        kdeplot = style_kwargs.get('kdeplot')
+
+    fig, axs = plt.subplots(1, 2, figsize=(14, 5), sharey=True, sharex=True)
+
+    # Left-hand side plot: Scatter plot colored by cluster category
+    sns.scatterplot(x, y, hue=hue, data=df.sort_values(hue), alpha=0.3, palette=palette, linewidth=0, ax=axs[0])
+    axs[0].vlines(df[x].mean(), 0, 1, color=vline_color, linewidth=1.15, linestyles='--',
+                  label=f'Mean {x}')
+    axs[0].hlines(df[y].mean(), 0, 1, color=hline_color, linewidth=1.15, linestyles='--',
+                  label=f'Mean {y}')
+    axs[0].set_xlabel(x, fontsize=12)
+    axs[0].set_ylabel(y, fontsize=12)
+    axs[0].set_title('Scatter plot by cluster', fontsize=13)
+    axs[0].set_xlim(-0.1, 1.1)
+    axs[0].set_ylim(-0.05, 1.05)
+
+    # Right-hand side plot: Cluster centroids with optional kernel density area
+    sns.scatterplot(x, y, hue=hue, data=df.groupby(hue).mean().reset_index(),
+                    alpha=1, palette=palette, linewidth=0, marker='X', s=100, ax=axs[1])
+
+    if kdeplot:
+        sns.kdeplot(x=x, y=y, hue=hue, data=df.sort_values(hue), levels=1, alpha=0.2, palette=palette,
+                    ax=axs[1])
+
+    axs[1].vlines(df[x].mean(), 0, 1, color=vline_color, linewidth=1, linestyles='--', label=f'Mean {x}')
+    axs[1].hlines(df[y].mean(), 0, 1, color=hline_color, linewidth=1, linestyles='--', label=f'Mean {y}')
+    axs[1].set_xlabel(x, fontsize=12)
+    axs[1].set_ylabel(y, fontsize=12)
+    axs[1].set_title('Cluster centroids', fontsize=13)
+
+    axs[0].legend(fontsize=11, title='', title_fontsize=12, labelspacing=0.5,
+                  loc=(0.93, 0.5 - 0.167 * (df[hue].nunique() // 4)))
+    axs[1].legend(fontsize=11, title='', title_fontsize=12, labelspacing=0.5,
+                  loc=(0.93, 0.5 - 0.167 * (df[hue].nunique() // 4)))
+
+    fig.tight_layout(pad=2)
     savefig(output_path=output_path, savefig_kws=savefig_kws)
