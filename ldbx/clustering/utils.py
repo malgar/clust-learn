@@ -1,6 +1,7 @@
 # Utils for clustering
 
 import numpy as np
+import pandas as pd
 
 from statsmodels.stats.weightstats import DescrStatsW
 
@@ -20,16 +21,19 @@ def weighted_sum_of_squared_distances(df, cluster_arr, weights=None):
     wssd: float
         Weighted sum of squared distances
     """
-    df['cluster'] = cluster_arr
-    df['weights'] = 1
-    if weights is not None:
-        df['weights'] = weights
+
+    if weights is None:
+        weights = np.ones(len(cluster_arr))
+
+    cl_df = pd.DataFrame(data={'cluster': cluster_arr, 'weights': weights})
+    cl_df.index = df.index
 
     wssd = 0
-    for cl in df['cluster'].unique():
-        df_cl = df[df['cluster'] == cl]
-        if df_cl.shape[0] > 1:
-            descr = DescrStatsW(df_cl[df_cl.columns], df_cl['weights'])
-            wssd += np.sum(np.array(list(map(np.sum, descr.demeaned**2))) * df_cl['weights'])
+    for cl in cl_df['cluster'].unique():
+        if cl_df[cl_df['cluster'] == cl].shape[0] > 1:
+            local_weights = cl_df.loc[cl_df['cluster'] == cl, 'weights']
+            descr = DescrStatsW(df.loc[cl_df[cl_df['cluster'] == cl].index],
+                                local_weights)
+            wssd += np.sum(np.array(list(map(np.sum, descr.demeaned ** 2))) * local_weights)
 
     return wssd

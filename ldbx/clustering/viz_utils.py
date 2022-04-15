@@ -89,7 +89,7 @@ def plot_clustercount(df, output_path=None, savefig_kws=None):
     """
     plt.figure(figsize=(df['cluster_cat'].nunique(), 5))
     sns.countplot(x='cluster_cat', data=df, color='#332288', alpha=0.9, order=np.sort(df['cluster_cat'].unique()))
-    plt.xticks(rotation=30)
+    # plt.xticks(rotation=30)
     plt.ylabel('count', fontsize=12, labelpad=10)
     plt.xlabel('clusters', fontsize=12, labelpad=10)
     plt.tight_layout(pad=2)
@@ -127,7 +127,7 @@ def plot_cluster_means_to_global_means_comparison(df, dimensions, xlabel=None, y
     fig, ax = plt.subplots(figsize=(20, 8))
     im = ax.imshow(df_diff[dimensions].values, cmap=cmap, norm=norm)
     ax.set(xticks=range(len(dimensions)), yticks=range(df_diff.shape[0]),
-           xticklabels=list(map(str.upper, dimensions)), yticklabels=df_diff['cluster_cat'])
+           xticklabels=list(map(str.upper, dimensions)), yticklabels=df_diff['cluster'])
     ax.tick_params(axis='x', rotation=40, labelsize=10)
     ax.tick_params(axis='y', labelsize=10)
     ax.set_xlabel('' if xlabel is None else xlabel, fontsize=12, weight='bold', labelpad=15)
@@ -173,7 +173,7 @@ def plot_distribution_comparison_by_cluster(df, cluster_labels, xlabel=None, yla
         Save figure options.
     """
     nclusters = len(np.unique(cluster_labels))
-    nvars = df.shape[0]
+    nvars = df.shape[1]
     ncols = max(1, min(nvars, 18//nclusters))
     if ncols > 3 and nvars % ncols > 0:
         if nvars % 3 == 0:
@@ -182,7 +182,7 @@ def plot_distribution_comparison_by_cluster(df, cluster_labels, xlabel=None, yla
             ncols=2
 
     nrows = nvars // ncols + (nvars % ncols > 0)
-    fig, axs = plt.subplots(nrows, ncols, figsize=(max(nclusters * ncols, 9), 6 * nrows))
+    fig, axs = plt.subplots(nrows, ncols, figsize=(max(nclusters * ncols, 9), 5 * nrows), sharex=True, sharey=True)
 
     i = 0
     for col in df.columns:
@@ -190,12 +190,18 @@ def plot_distribution_comparison_by_cluster(df, cluster_labels, xlabel=None, yla
         sns.violinplot(y=df[col], x=cluster_labels, linewidth=1, ax=ax)
         plt.setp(ax.collections, alpha=.4)
         sns.boxplot(y=df[col], x=cluster_labels, width=0.2, linewidth=1, color='grey', ax=ax)
-        sns.stripplot(y=df[col], x=cluster_labels, alpha=0.9, size=3)
-        ax.set_xlabel('custer' if xlabel is None else xlabel, fontsize=12, weight='bold', labelpad=15)
-        ax.set_ylabel(col if ylabel is None else ylabel, fontsize=12, weight='bold', labelpad=15)
+        sns.stripplot(y=df[col], x=cluster_labels, alpha=0.7, size=3, ax=ax)
+        ax.set_ylabel(col if ylabel is None else ylabel, fontsize=12, labelpad=15)
+        if i // ncols == nrows-1:
+            ax.set_xlabel('custer' if xlabel is None else xlabel, fontsize=12, labelpad=15)
         i += 1
 
-    fig.tight_layout()
+    while i < ncols * nrows:
+        ax = get_axis(i, axs, ncols, nrows)
+        ax.axis('off')
+        i += 1
+
+    fig.tight_layout(pad=2)
     savefig(output_path=output_path, savefig_kws=savefig_kws)
 
 
@@ -247,7 +253,7 @@ def plot_clusters_2D(x, y, hue, df, style_kwargs=dict(), output_path=None, savef
     fig, axs = plt.subplots(1, 2, figsize=(14, 5), sharey=True, sharex=True)
 
     # Left-hand side plot: Scatter plot colored by cluster category
-    sns.scatterplot(x, y, hue=hue, data=df.sort_values(hue), alpha=0.3, palette=palette, linewidth=0, ax=axs[0])
+    sns.scatterplot(x=x, y=y, hue=hue, data=df.sort_values(hue), alpha=0.3, palette=palette, linewidth=0, ax=axs[0])
     axs[0].vlines(df[x].mean(), 0, 1, color=vline_color, linewidth=1.15, linestyles='--',
                   label=f'Mean {x}')
     axs[0].hlines(df[y].mean(), 0, 1, color=hline_color, linewidth=1.15, linestyles='--',
@@ -259,7 +265,7 @@ def plot_clusters_2D(x, y, hue, df, style_kwargs=dict(), output_path=None, savef
     axs[0].set_ylim(-0.05, 1.05)
 
     # Right-hand side plot: Cluster centroids with optional kernel density area
-    sns.scatterplot(x, y, hue=hue, data=df.groupby(hue).mean().reset_index(),
+    sns.scatterplot(x=x, y=y, hue=hue, data=df.groupby(hue).mean().reset_index(),
                     alpha=1, palette=palette, linewidth=0, marker='X', s=100, ax=axs[1])
 
     if kdeplot:

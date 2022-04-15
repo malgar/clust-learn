@@ -47,54 +47,57 @@ class Clustering(base.BaseEstimator, base.TransformerMixin):
             algorithms = [algorithms]
         self.algorithms = list(map(str.lower, algorithms))
 
-        self.instances = dict()
+        self.instances_ = dict()
         for algorithm in self.algorithms:
             if algorithm in KMEANS:
-                self.instances[algorithm] = KMeans(random_state=42)
+                self.instances_[algorithm] = KMeans(random_state=42)
             elif algorithm in HIERARCHICAL_WARD:
-                self.instances[algorithm] = AgglomerativeClustering()
+                self.instances_[algorithm] = AgglomerativeClustering()
             else:
                 raise RuntimeWarning(f'''Algorithm {algorithm} is not supported.
                                      Supported algorithms are: KMeans and Hierarchical clustering''')
 
-        self.scores = dict()
-        for algorithm in self.algorithms:
-            if algorithm in KMEANS + HIERARCHICAL_WARD:
-                self.scores[algorithm] = []
+        self.scores_ = dict()
+        self._initialize_scores()
 
         self.metric = 'inertia'
-        self.optimal_config = None
+        self.optimal_config_ = None
+
+    def _initialize_scores(self):
+        for algorithm in self.algorithms:
+            if algorithm in KMEANS + HIERARCHICAL_WARD:
+                self.scores_[algorithm] = []
 
     def _compute_clusters(self, algorithm, n_clusters):
-        self.instances[algorithm].set_params(n_clusters=n_clusters)
-        self.instances[algorithm].fit(self.df[self.dimensions])
-        self.labels_ = self.instances[algorithm].labels_
+        self.instances_[algorithm].set_params(n_clusters=n_clusters)
+        self.instances_[algorithm].fit(self.df[self.dimensions])
+        self.labels_ = self.instances_[algorithm].labels_
 
     def _compute_optimal_clustering_config(self, metric, cluster_range, weights):
         optimal_list = []
         for algorithm in self.algorithms:
             for nc in range(*cluster_range):
-                self.instances[algorithm].set_params(n_clusters=nc)
-                self.instances[algorithm].fit(self.df[self.dimensions])
+                self.instances_[algorithm].set_params(n_clusters=nc)
+                self.instances_[algorithm].fit(self.df[self.dimensions])
 
                 if metric == 'inertia':
-                    self.scores[algorithm].append(
-                        weighted_sum_of_squared_distances(self.df[self.dimensions], self.instances[algorithm].labels_,
+                    self.scores_[algorithm].append(
+                        weighted_sum_of_squared_distances(self.df[self.dimensions], self.instances_[algorithm].labels_,
                                                           weights))
                 elif metric == 'davies_bouldin_score':
-                    self.scores[algorithm].append(
+                    self.scores_[algorithm].append(
                         1 if nc == 1 else davies_bouldin_score(self.df[self.dimensions],
-                                                               self.instances[algorithm].labels_))
+                                                               self.instances_[algorithm].labels_))
                 elif metric == 'silhouette_score':
-                    self.scores[algorithm].append(
-                        0 if nc == 1 else silhouette_score(self.df[self.dimensions], self.instances[algorithm].labels_))
+                    self.scores_[algorithm].append(
+                        0 if nc == 1 else silhouette_score(self.df[self.dimensions], self.instances_[algorithm].labels_))
 
             if len(range(*cluster_range)) > 1:
-                kl = KneeLocator(x=range(*cluster_range), y=self.scores[algorithm], curve='convex',
+                kl = KneeLocator(x=range(*cluster_range), y=self.scores_[algorithm], curve='convex',
                                  direction='decreasing')
-                optimal_list.append((algorithm, kl.knee, self.scores[algorithm][kl.knee-cluster_range[0]]))
+                optimal_list.append((algorithm, kl.knee, self.scores_[algorithm][kl.knee-cluster_range[0]]))
             else:
-                optimal_list.append((algorithm, cluster_range[0], self.scores[algorithm][0]))
+                optimal_list.append((algorithm, cluster_range[0], self.scores_[algorithm][0]))
 
         return min(optimal_list, key=lambda t: t[2])
 
@@ -131,6 +134,7 @@ class Clustering(base.BaseEstimator, base.TransformerMixin):
             raise RuntimeError(f'''Metric {metric} not supported.
                                Supported metrics: {__metrics__}''')
 
+        self._initialize_scores()
         self.metric = metric
 
         # Compute optimal number of clusters
@@ -140,13 +144,14 @@ class Clustering(base.BaseEstimator, base.TransformerMixin):
         else:
             cluster_range = [1, max_clusters + 1]
 
-        self.optimal_config = self._compute_optimal_clustering_config(metric, cluster_range, weights)
+        self.optimal_config_ = self._compute_optimal_clustering_config(metric, cluster_range, weights)
 
-        if self.optimal_config is None:
+        if self.optimal_config_ is None:
             raise RuntimeError('Optimal cluster configuration not available')
 
-        self._compute_clusters(self.optimal_config[0], self.optimal_config[1])
+        self._compute_clusters(self.optimal_config_[0], self.optimal_config_[1])
 
+        # TODO: Might be interesting to only keep one
         self.df['cluster'] = self.labels_
         self.df['cluster_cat'] = self.labels_
         if prefix is not None:
@@ -191,7 +196,7 @@ class Clustering(base.BaseEstimator, base.TransformerMixin):
             variables.remove('cluster')
 
         if cluster_filter is None:
-            cluster_filter = df_ext['cluster'].unique()
+            cluster_filter = list(df_ext['cluster'].unique())
         if not isinstance(cluster_filter, list):
             cluster_filter = [cluster_filter]
 
@@ -279,7 +284,7 @@ class Clustering(base.BaseEstimator, base.TransformerMixin):
             df_test = df_test[vars_test + ['cluster']]
 
         if cluster_filter is None:
-            cluster_filter = df_test['cluster'].unique()
+            cluster_filter = list(df_test['cluster'].unique())
         if not isinstance(cluster_filter, list):
             cluster_filter = [cluster_filter]
 
@@ -312,7 +317,7 @@ class Clustering(base.BaseEstimator, base.TransformerMixin):
         """
         contingency_t = self.describe_clusters_cat(cat_array)
         test_res = chi2_contingency(contingency_t.values)
-        return test_res[:-1]
+        return dict(zip(['chi2', 'p', 'dof'], test_res[:-1]))
 
     def plot_score_comparison(self, output_path=None, savefig_kws=None):
         """
@@ -327,13 +332,13 @@ class Clustering(base.BaseEstimator, base.TransformerMixin):
         """
         metric_name = METRIC_NAMES[self.metric]
 
-        cluster_range = [1, self.optimal_config[1] + 1]
-        if len(self.scores[self.optimal_config[0]]) > 1:
-            cluster_range = [1, len(self.scores[self.optimal_config[0]]) + 1]
+        cluster_range = [1, self.optimal_config_[1] + 1]
+        if len(self.scores_[self.optimal_config_[0]]) > 1:
+            cluster_range = [1, len(self.scores_[self.optimal_config_[0]]) + 1]
         else:
-            cluster_range = [self.optimal_config[1], self.optimal_config[1] + 1]
+            cluster_range = [self.optimal_config_[1], self.optimal_config_[1] + 1]
 
-        plot_score_comparison(self.scores, cluster_range, metric_name, output_path, savefig_kws)
+        plot_score_comparison(self.scores_, cluster_range, metric_name, output_path, savefig_kws)
 
     def plot_optimal_components_normalized(self, output_path=None, savefig_kws=None):
         """
@@ -346,9 +351,9 @@ class Clustering(base.BaseEstimator, base.TransformerMixin):
         savefig_kws: dict, default=None
             Save figure options.
         """
-        if len(self.scores[self.optimal_config[0]]) > 1:
-            plot_optimal_components_normalized(self.scores[self.optimal_config[0]],
-                                               len(self.scores[self.optimal_config[0]]),
+        if len(self.scores_[self.optimal_config_[0]]) > 1:
+            plot_optimal_components_normalized(self.scores_[self.optimal_config_[0]],
+                                               len(self.scores_[self.optimal_config_[0]]),
                                                METRIC_NAMES[self.metric],
                                                output_path, savefig_kws)
         else:
@@ -387,7 +392,7 @@ class Clustering(base.BaseEstimator, base.TransformerMixin):
         savefig_kws: dict, default=None
             Save figure options.
         """
-        plot_cluster_means_to_global_means_comparison(self.df, self.dimensions, xlabel, ylabel, output_path,
+        plot_cluster_means_to_global_means_comparison(self.df, self.dimensions, xlabel, ylabel, levels, output_path,
                                                       savefig_kws)
 
     def plot_distribution_comparison_by_cluster(self, df_ext=None, xlabel=None, ylabel=None, output_path=None,
@@ -422,12 +427,14 @@ class Clustering(base.BaseEstimator, base.TransformerMixin):
 
         Parameters
         ----------
-        coor1 : int or str
-            If int, it represents the id of the variable to be used.
+        coor1 : int, str, or `pandas.Series`
+            If int, it represents the id of the internal variable to be used.
             If str, it must be an internal variable name.
-        coor2 : int or str
-            If int, it represents the id of the variable to be used.
+            If `pandas.Series`, it is assumed it is an external variable.
+        coor2 : int, str, or `pandas.Series`
+            If int, it represents the id of the internal variable to be used.
             If str, it must be an internal variable name.
+            If `pandas.Series`, it is assumed it is an external variable.
         style_kwargs : dict, default=empty dict
             Dictionary with optional styling parameters.
             List of parameters:
@@ -444,8 +451,19 @@ class Clustering(base.BaseEstimator, base.TransformerMixin):
             coor1 = self.dimensions[coor1]
         if isinstance(coor2, int):
             coor2 = self.dimensions[coor2]
+
+        df_ext = self.df
+        if isinstance(coor1, pd.Series):
+            if not isinstance(coor2, pd.Series):
+                raise TypeError('For external variables, both coor1 and coor2 need to be of type pandas.Series')
+            df_ext = pd.DataFrame(data={coor1.name: coor1,
+                                        coor2.name: coor2,
+                                        'cluster_cat': self.df['cluster_cat'].values})
+            coor1 = coor1.name
+            coor2 = coor2.name
+
         hue = 'cluster_cat'
-        plot_clusters_2D(coor1, coor2, hue, self.df, style_kwargs=dict(), output_path=None, savefig_kws=None)
+        plot_clusters_2D(coor1, coor2, hue, df_ext, style_kwargs=dict(), output_path=None, savefig_kws=None)
 
     def plot_cat_distribution_by_cluster(self, cat_array, cat_label=None, cluster_label=None, output_path=None,
                                          savefig_kws=None):
