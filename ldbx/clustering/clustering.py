@@ -129,6 +129,11 @@ class Clustering(base.BaseEstimator, base.TransformerMixin):
         weights: `numpy.array`, default=None
             In case observations have different weights.
             *Note this is not implemented yet.*
+
+        Returns
+        ----------
+        labels_: `numpy.array`
+            Cluster label of each observation.
         """
         if metric not in __metrics__:
             raise RuntimeError(f'''Metric {metric} not supported.
@@ -181,6 +186,11 @@ class Clustering(base.BaseEstimator, base.TransformerMixin):
             *Note any statistics supported by Pandas can be used. This includes the `describe` function*
         output_path: str, default=None
             If an output_path is passed, the resulting DataFame is saved as a CSV file.
+
+        Returns
+        ----------
+        res: `pandas.DataFrame`
+            DataFrame with the cluster description.
         """
         if df_ext is not None:
             df_ext['cluster'] = self.labels_
@@ -226,6 +236,11 @@ class Clustering(base.BaseEstimator, base.TransformerMixin):
             If True, results are row-normalized.
         output_path : str, default=None
             If an output_path is passed, the resulting DataFame is saved as a CSV file.
+
+        Returns
+        ----------
+        freq: `pandas.DataFrame`
+            DataFrame with a cluster description based on the passed categorical variable.
         """
         freq = pd.crosstab(index=self.df['cluster_cat'], columns=cat_array, rownames=['Clusters'], colnames=[cat_name])
         if order is not None:
@@ -251,6 +266,11 @@ class Clustering(base.BaseEstimator, base.TransformerMixin):
         ----------
         output_path : str, default=None
             If an output_path is passed, the resulting DataFame is saved as a CSV file.
+
+        Returns
+        ----------
+        df_agg_diff: `pandas.DataFrame`
+            DataFrame with the comparison.
         """
         return compare_cluster_means_to_global_means(self.df, self.dimensions, output_path=None)
 
@@ -272,6 +292,11 @@ class Clustering(base.BaseEstimator, base.TransformerMixin):
             In case the tests should only be applied on a subset of  clusers.
         output_path : str, default=None
             If an output_path is passed, the resulting DataFame is saved as a CSV file.
+
+        Returns
+        ----------
+        res: `pandas.DataFrame`
+            DataFrame with the corresponding test statistics.
         """
         if df_test is not None:
             df_test['cluster'] = self.labels_
@@ -314,6 +339,11 @@ class Clustering(base.BaseEstimator, base.TransformerMixin):
         cat_array : `pandas.Series` or `numpy.array`
             Values of categorical variable.
             The order of the observations must be the same as that of the base DataFrame.
+
+        Returns
+        ----------
+        dict: dictionary
+            Dictionary with the corresponding test statistics.
         """
         contingency_t = self.describe_clusters_cat(cat_array)
         test_res = chi2_contingency(contingency_t.values)
