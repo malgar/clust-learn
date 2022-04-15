@@ -208,7 +208,8 @@ def plot_cat_main_contributor_distribution(df, df_trans, thres=0.14, n_contribut
         df_trans = df_trans[dim_name].to_frame()
     else:
         raise RuntimeWarning(
-            '`plot_disc_main_contributor_distribution` is designed to plot one component at a time.')
+            '''`plot_disc_main_contributor_distribution` is designed to plot one component at a time. 
+            Provide a value for dim_idx''')
 
     mc = cat_main_contributors(df, df_trans, thres=thres, n_contributors=n_contributors, dim_idx=dim_idx)
 

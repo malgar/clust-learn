@@ -16,19 +16,18 @@ class DimensionalityReduction(base.BaseEstimator, base.TransformerMixin):
 
     Parameters
     ----------
+    df : `pandas.DataFrame`
+            DataFrame containing the data.
+    num_vars: string, list, series, or vector array
+            Numerical variable name(s).
+    cat_vars: string, list, series, or vector array
+            Categorical variable name(s).
     num_algorithm : str, default='pca'
         Technique to be used for dimensionality reduction for numerical variables.
         By default, PCA (Principal Component Analysis) is used.
     cat_algorithm : str, default='mca'
         Technique to be used for dimensionality reduction for categorical variables.
         By default, MCA (Multiple Correspondence Analysis) is used.
-    n_components : int, default=None
-        Number components to compute. If None, then `n_components` is set to the number of features.
-        Note this number is approximate because numerical and categorical vars are treated independently.
-    min_explained_variance_ratio: float, default 0.5
-        Minimum explained variance ratio to be achieved. If `n_components` is not None,
-        `min_explained_variance_ratio` will be ignored.
-        If None: optimal
     num_kwargs: dictionary
         Additional keyword arguments to pass to the model used for numerical variables.
     cat_kwargs: dictionary
@@ -37,24 +36,25 @@ class DimensionalityReduction(base.BaseEstimator, base.TransformerMixin):
 
     def __init__(
             self,
+            df,
+            num_vars=None,
+            cat_vars=None,
             num_algorithm='pca',
             cat_algorithm='mca',
-            n_components=None,
-            min_explained_variance_ratio=None,
             num_kwargs=None,
             cat_kwargs=None
     ):
         self.num_algorithm = str.lower(num_algorithm)
         self.cat_algorithm = str.lower(cat_algorithm)
-        self.n_components = n_components
-        self.min_explained_variance_ratio = min_explained_variance_ratio
-        self.df = None
-        self.num_vars = None
-        self.cat_vars = None
-        self.num_trans = None
-        self.cat_trans = None
-        self.num_components = None
-        self.cat_components = None
+        self.n_components = None
+        self.min_explained_variance_ratio = 0.5
+        self.df = df
+        self.num_vars = num_vars
+        self.cat_vars = cat_vars
+        self.num_trans_ = None
+        self.cat_trans_ = None
+        self.num_components_ = None
+        self.cat_components_ = None
         self.num_kwargs = {} if num_kwargs is None else num_kwargs
         self.cat_kwargs = {} if cat_kwargs is None else cat_kwargs
 
@@ -63,32 +63,33 @@ class DimensionalityReduction(base.BaseEstimator, base.TransformerMixin):
 
         self.num_model = None
         if self.num_algorithm == 'pca':
-            self.num_model = PCA(n_components=n_components, random_state=42, **self.num_kwargs)
+            self.num_model = PCA(n_components=None, random_state=42, **self.num_kwargs)
         elif self.num_algorithm in ['spca', 'sparsepca']:
-            self.num_model = SparsePCA(n_components=n_components, random_state=42, **self.num_kwargs)
+            self.num_model = SparsePCA(n_components=None, random_state=42, **self.num_kwargs)
         else:
             raise RuntimeError('''An error occurred while initializing the algorithm.
                                Check the algorithm name for numerical variables.''')
 
         self.cat_model = None
         if self.cat_algorithm == 'mca':
-            self.cat_model = prince.MCA(n_components=n_components, n_iter=10, random_state=42, **self.cat_kwargs)
+            self.cat_model = prince.MCA(n_components=None, n_iter=10, random_state=42, **self.cat_kwargs)
         else:
             raise RuntimeError('''An error occurred while initializing the algorithm.
                                Check the algorithm name for categorical variables.''')
 
-    def transform(self, df, num_vars=None, cat_vars=None):
+    def transform(self, n_components=None, min_explained_variance_ratio=0.5):
         """
         Transforms a DataFrame df to a lower dimensional space
 
         Parameters
         ----------
-        df : `pandas.DataFrame`
-            DataFrame containing the data.
-        num_vars: string, list, series, or vector array
-            Numerical variable name(s).
-        cat_vars: string, list, series, or vector array
-            Categorical variable name(s).
+        n_components : int, default=None
+            Number components to compute. If None, then `n_components` is set to the number of features.
+            Note this number is approximate because numerical and categorical vars are treated independently.
+        min_explained_variance_ratio: float, default 0.5
+            Minimum explained variance ratio to be achieved. If `n_components` is not None,
+            `min_explained_variance_ratio` will be ignored.
+            If None: optimal
 
         Returns
         ----------
@@ -96,37 +97,38 @@ class DimensionalityReduction(base.BaseEstimator, base.TransformerMixin):
             DataFrame with the transformed data.
         """
 
-        self.df = df
-        self.num_vars = num_vars
-        self.cat_vars = cat_vars
+        self.n_components = n_components
+        self.min_explained_variance_ratio = min_explained_variance_ratio
 
         # If the number of components is specified and there are numerical and categorical variables
         # the number of components for each type of variables is distributed proportionally
         n_components_num = None
         n_components_cat = None
         if self.n_components is not None:
-            if num_vars is None:
-                n_components_cat = np.minimum(self.n_components, df[cat_vars].nunique().sum())
-            if cat_vars is None:
-                n_components_num = np.minimum(self.n_components, len(num_vars))
-            if num_vars is not None and cat_vars is not None:
-                n_components_num = int(np.ceil(self.n_components * len(num_vars) / (len(num_vars) + len(cat_vars))))
-                n_components_cat = int(np.ceil(self.n_components * len(cat_vars) / (len(num_vars) + len(cat_vars))))
-        
+            if self.num_vars is None:
+                n_components_cat = np.minimum(self.n_components, self.df[self.cat_vars].nunique().sum())
+            if self.cat_vars is None:
+                n_components_num = np.minimum(self.n_components, len(self.num_vars))
+            if self.num_vars is not None and self.cat_vars is not None:
+                n_components_num = int(
+                    np.ceil(self.n_components * len(self.num_vars) / (len(self.num_vars) + len(self.cat_vars))))
+                n_components_cat = int(
+                    np.ceil(self.n_components * len(self.cat_vars) / (len(self.num_vars) + len(self.cat_vars))))
+
         trans = pd.DataFrame()
-        if num_vars is not None:
-            self.num_trans = self._transform_num(df[num_vars], n_components_num)
-            trans = pd.concat([trans, self.num_trans], axis=1)
-        if cat_vars is not None:
-            self.cat_trans = self._transform_cat(df[cat_vars], n_components_cat)
-            trans = pd.concat([trans, self.cat_trans], axis=1)
+        if self.num_vars is not None:
+            self.num_trans_ = self._transform_num(self.df[self.num_vars], n_components_num)
+            trans = pd.concat([trans, self.num_trans_], axis=1)
+        if self.cat_vars is not None:
+            self.cat_trans_ = self._transform_cat(self.df[self.cat_vars], n_components_cat)
+            trans = pd.concat([trans, self.cat_trans_], axis=1)
 
         idx_positions = np.maximum(len(str(trans.shape[1])), 2)
         trans.columns = [f'dim_{str(i+1).zfill(idx_positions)}' for i in range(trans.shape[1])]
-        self.num_components = list(trans.columns)[:self.num_trans.shape[1]]
-        self.num_trans.columns = self.num_components
-        self.cat_components = list(trans.columns)[-self.cat_trans.shape[1]:]
-        self.cat_trans.columns = self.cat_components
+        self.num_components_ = list(trans.columns)[:self.num_trans_.shape[1]]
+        self.num_trans_.columns = self.num_components_
+        self.cat_components_ = list(trans.columns)[-self.cat_trans_.shape[1]:]
+        self.cat_trans_.columns = self.cat_components_
         return trans
 
     def _transform_num(self, df, n_components_num=None):
@@ -217,7 +219,7 @@ class DimensionalityReduction(base.BaseEstimator, base.TransformerMixin):
         mc: `pandas.DataFrame`
             DataFrame with the main contributors of every derived variable.
         """
-        return num_main_contributors(self.df[self.num_vars], self.num_trans, thres, n_contributors, dim_idx,
+        return num_main_contributors(self.df[self.num_vars], self.num_trans_, thres, n_contributors, dim_idx,
                                      component_description, col_description, output_path)
 
     def cat_main_contributors(self, thres=0.14, n_contributors=None, dim_idx=None, component_description=None,
@@ -251,7 +253,7 @@ class DimensionalityReduction(base.BaseEstimator, base.TransformerMixin):
         mc: `pandas.DataFrame`
             DataFrame with the main contributors of every derived variable.
         """
-        return cat_main_contributors(self.df[self.cat_vars], self.cat_trans, thres, n_contributors, dim_idx,
+        return cat_main_contributors(self.df[self.cat_vars], self.cat_trans_, thres, n_contributors, dim_idx,
                                      component_description, col_description, output_path)
 
     def cat_main_contributors_stats(self, thres=0.14, n_contributors=None, dim_idx=None, output_path=None):
@@ -278,7 +280,7 @@ class DimensionalityReduction(base.BaseEstimator, base.TransformerMixin):
         stats: `pandas.DataFrame`
             DataFrame with the statistics.
         """
-        return cat_main_contributors_stats(self.df[self.cat_vars], self.cat_trans, thres, n_contributors, dim_idx,
+        return cat_main_contributors_stats(self.df[self.cat_vars], self.cat_trans_, thres, n_contributors, dim_idx,
                                            output_path)
 
     def plot_num_explained_variance(self, thres=0.5, plots='all', output_path=None, savefig_kws=None):
@@ -336,7 +338,7 @@ class DimensionalityReduction(base.BaseEstimator, base.TransformerMixin):
         savefig_kws: dict, default=None
             Save figure options.
         """
-        plot_num_main_contributors(self.df[self.num_vars], self.num_trans, thres, n_contributors, dim_idx, output_path,
+        plot_num_main_contributors(self.df[self.num_vars], self.num_trans_, thres, n_contributors, dim_idx, output_path,
                                    savefig_kws)
 
     def plot_cat_main_contributor_distribution(self, thres=0.14, n_contributors=None, dim_idx=None, output_path=None,
@@ -359,7 +361,7 @@ class DimensionalityReduction(base.BaseEstimator, base.TransformerMixin):
         savefig_kws: dict, default=None
             Save figure options.
         """
-        plot_cat_main_contributor_distribution(self.df[self.cat_vars], self.cat_trans, thres, n_contributors, dim_idx,
+        plot_cat_main_contributor_distribution(self.df[self.cat_vars], self.cat_trans_, thres, n_contributors, dim_idx,
                                                output_path, savefig_kws)
 
     def plot_cumulative_explained_var_comparison(self, thres=None, output_path=None, savefig_kws=None):
@@ -376,6 +378,6 @@ class DimensionalityReduction(base.BaseEstimator, base.TransformerMixin):
             Save figure options.
         """
         plot_cumulative_explained_var_comparison(self.pca.explained_variance_ratio_.cumsum(),
-                                                 (self.num_trans.var().values/len(self.num_vars)).cumsum(),
+                                                 (self.num_trans_.var().values/len(self.num_vars)).cumsum(),
                                                  name1='pca', name2=self.num_algorithm, thres=thres,
                                                  output_path=output_path, savefig_kws=savefig_kws)
