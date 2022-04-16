@@ -2,8 +2,18 @@
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 
 from matplotlib.ticker import MaxNLocator
+
+
+def compute_high_corr_pairs(df, corr_thres=0.8, method='pearson'):
+    hi_corr = df.corr(method=method).replace(1,0)
+    hi_corr = hi_corr[np.abs(hi_corr) > corr_thres]
+    hi_corr = pd.melt(hi_corr.reset_index(), id_vars='index', value_vars=df.columns, var_name='var2',
+                      value_name='corr_coeff').dropna().rename(columns={'index': 'var1'})\
+        .sort_values('corr_coeff', ascending=False).reset_index(drop=True)
+    return hi_corr
 
 
 def get_axis(i, axs, ncols, nrows):
