@@ -14,14 +14,26 @@ from viz_utils import *
 
 
 class Classifier(base.BaseEstimator, base.TransformerMixin):
+    """
+    Class to manage the classification model.
 
-    def __init__(self, df, predictors, target):
+    Parameters
+    ----------
+    df : `pandas:DatasFrame`
+        DataFrame with main data
+    predictor_cols : list
+        List of columns to use as predictors.
+    target : `numpy.array` or list
+        values of the target variable.
+    """
+
+    def __init__(self, df, predictor_cols, target):
         self.df = df
-        self.original_features = predictors
+        self.original_features = predictor_cols
         self.filtered_features = None
         self.target = target
         self.model_ = None
-        self.X_train_, self.X_test_, self.y_train_, self.y_test_ = None
+        self.X_train_, self.X_test_, self.y_train_, self.y_test_ = tuple([None]*4)
         self.grid_result_ = None
 
         # Initialize logger
@@ -34,6 +46,44 @@ class Classifier(base.BaseEstimator, base.TransformerMixin):
     def train_model(self, model=None, feature_selection=True, features_to_keep=[],
                     feature_selection_model=None, hyperparameter_tuning=False, param_grid=None,
                     train_size=0.8):
+        """
+        This method trains a classification model.
+
+        By default, it uses XGBoost, but any other estimator (instance of `scikit-learn.Estimator`) can be used.
+
+        The building process consists of three main steps:
+         - Feature Selection (optional)
+           Feature removing highly correlated variables using a classification model and SHAP values
+           to determine which to keep, and Recursive Feature Elimination with Cross-Validation (RFECV)
+           on the remaining features.
+         - Hyperparameter tuning (optional)
+           Runs grid search with cross-validation for hyperparameter tuning. **Note** the parameter grid
+           must be passed.
+         - Model training
+           Trains a classification model with the selected features and hyperparameters. By default, an XGBoost
+           classifier will be trained.
+
+        **Note** both hyperparameter tuning and model training are run on a train set. Train-test split is performed
+        using `sklearn.model_selection.train_test_split`.
+
+        Parameters
+        ----------
+        model : `scikit-learn.Estimator`, default=None
+            Model to use as classifier. By default, `xgboost.XGBClassifier`.
+        feature_selection : boolean, default=True
+            If True, feature selection is performed on the original features.
+        features_to_keep : list, default=empty list
+            Features to be kept during the feature selection process.
+        feature_selection_model : `scikit-learn.Estimator`, default=None
+            Model to be used for feature selection. By default, `sklearn.ensemble.RandomForestClassifier`.
+        hyperparameter_tuning : boolean, default=False
+            If True, hyperparameter tuning is run using the parameter grid `param_grid`.
+        param_grid : dictionary, default=None
+            Parameter grid for hyperparameter tuning. **Note** if hyperparameter_tuning=True, a parameter grid is
+            needed.
+        train_size : float, default=0.8
+            Size of the train split of the data for model training.
+        """
         # Feature selection
         if feature_selection:
             self.logger.info('Running feature selection...')
@@ -42,7 +92,7 @@ class Classifier(base.BaseEstimator, base.TransformerMixin):
                 feature_selection_model = RandomForestClassifier(max_depth=10,  min_samples_leaf=min_samples_leaf)
 
             self.filtered_features = utils.feature_selection(self.df, self.original_features, self.target,
-                                                             features_to_keep, feature_selection_model)
+                                                             feature_selection_model, features_to_keep)
         else:
             self.filtered_features = self.original_features.copy()
 
@@ -58,6 +108,8 @@ class Classifier(base.BaseEstimator, base.TransformerMixin):
 
         # Hyperparameter tuning
         if hyperparameter_tuning:
+            if param_grid is None:
+                raise RuntimeError('For hyperparameter tuning, some parameter grid must be passed - `param_grid`')
             self.logger.info('Running hyperparameter tuning...')
             self.grid_result_ = utils.hyperparameter_tuning(self.X_train_, self.y_train_, self.model_, param_grid)
             self.model_.set_params(**self.grid_result_.best_params_)
@@ -71,8 +123,16 @@ class Classifier(base.BaseEstimator, base.TransformerMixin):
     def feature_importances(self):
         return utils.shap_importances(self.model_, self.X_train_)
 
-    @property
     def hyperparameter_tuning_metrics(self, output_path=None):
+        """
+        This method returns the average and standard deviation of the cross-validation runs for every hyperparameter
+        combination in hyperparameter tuning.
+
+        Parameters
+        ----------
+        output_path : str, default=None
+            If an output_path is passed, the resulting DataFame is saved as a CSV file.
+        """
         htm = pd.DataFrame(self.grid_result_.cv_results_['params'])
         htm.columns = pd.MultiIndex.from_product([[f'{self.model_.__class__.__name__} Hyperparameters'], htm.columns])
         htm[('Performance metrics', 'mean_test_score')] = self.grid_result_.cv_results_['mean_test_score']
@@ -84,6 +144,24 @@ class Classifier(base.BaseEstimator, base.TransformerMixin):
         return htm
 
     def confusion_matrix(self, test=True, sum_stats=True, output_path=None):
+        """
+        This method returns the confusion matrix of the classification model.
+
+        Parameters
+        ----------
+        test : boolean, default=True
+            If True, returns the confusion matrix calculated on the test set. If False, returns the confusion matrix on
+            the train set.
+        sum_stats : boolean, default=True
+            If True, adds row (recall), column (precision), and global accuracy metrics to the matrix.
+        output_path : str, default=None
+            If an output_path is passed, the resulting DataFame is saved as a CSV file.
+
+        Returns
+        ----------
+        cm : `pandas.DataFrame`
+            DataFrame with confusion matrix.
+        """
         X = self.X_test_ if test else self.X_train_
         y = self.y_test_ if test else self.y_train_
 
@@ -107,6 +185,24 @@ class Classifier(base.BaseEstimator, base.TransformerMixin):
         return cm
 
     def classification_report(self, test=True, output_path=None):
+        """
+        This method returns the `sklearn.metrics.classification_report` in `pandas.DataFrame` format.
+        This report contains the intra-class metrics precision, recall and F1-score, together with the global accuracy,
+        and macro average and weighted average of the three intra-class metrics.
+
+        Parameters
+        ----------
+        test : boolean, default=True
+            If True, returns the confusion matrix calculated on the test set. If False, returns the confusion matrix on
+            the train set.
+        output_path : str, default=None
+            If an output_path is passed, the resulting DataFame is saved as a CSV file.
+
+        Returns
+        ----------
+        report : `pandas.DataFrame`
+            DataFrame with classification report.
+        """
         X = self.X_test_ if test else self.X_train_
         y = self.y_test_ if test else self.y_train_
 
@@ -119,14 +215,55 @@ class Classifier(base.BaseEstimator, base.TransformerMixin):
         return report
 
     def plot_shap_importances(self, n_top=7, output_path=None, savefig_kws=None):
+        """
+        Plots shap importance values, calculated as the combined average of the absolute values of the shap values
+        for all classes.
+
+        Parameters
+        ----------
+        n_top : int, default=7
+           Top n features to be displayed. The importances of the rest are aggregated and displayed under the tag "Rest".
+        output_path : str, default=None
+           Path to save figure as image.
+        savefig_kws : dict, default=None
+           Save figure options.
+        """
         plot_shap_importances(self.model_, self.X_train_, n_top=n_top, output_path=output_path, savefig_kws=savefig_kws)
 
     def plot_confusion_matrix(self, test=True, sum_stats=True, output_path=None, savefig_kws=None):
+        """
+        This function makes a pretty plot of an sklearn Confusion Matrix cf using a Seaborn heatmap visualization.
+
+        Parameters
+        ---------
+        test : boolean, default=True
+            If True, returns the confusion matrix calculated on the test set. If False, returns the confusion matrix on
+            the train set.
+        sum_stats : boolean, default=True
+            If True, show precision and recall per class, and global accuracy, appended to the matrix.
+        output_path : str, default=None
+            Path to save figure as image.
+        savefig_kws : dict, default=None
+            Save figure options.
+        """
         cm = self.confusion_matrix(test, sum_stats)
-        plot_confusion_matrix(cm, sum_stats=sum_stats, figsize=(cm.shape[0]+1, cm.shape[0]), output_path=output_path,
-                              savefig_kws=savefig_kws)
+        plot_confusion_matrix(cm, sum_stats=sum_stats, figsize=(cm.shape[0]+1, cm.shape[0]),
+                              output_path=output_path, savefig_kws=savefig_kws)
 
     def plot_roc_curves(self, test=True, output_path=None, savefig_kws=None):
+        """
+       Plots ROC curve for every class.
+
+       Parameters
+       ---------
+       test : boolean, default=True
+            If True, returns the confusion matrix calculated on the test set. If False, returns the confusion matrix on
+            the train set.
+       output_path : str, default=None
+           Path to save figure as image.
+       savefig_kws : dict, default=None
+           Save figure options.
+       """
         X = self.X_test_ if test else self.X_train_
         y = self.y_test_ if test else self.y_train_
         plot_roc_curves(X, y, self.model_, output_path=output_path, savefig_kws=savefig_kws)

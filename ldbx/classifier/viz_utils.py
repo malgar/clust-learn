@@ -14,6 +14,23 @@ sns.set_style('whitegrid')
 
 
 def plot_shap_importances(model, X, n_top=7, output_path=None, savefig_kws=None):
+    """
+    Plots shap importance values, calculated as the combined average of the absolute values of the shap values
+    for all classes.
+
+    Parameters
+    ----------
+    model : `scikit-learn.Estimator`
+        Classification model (already trained).
+    X : `pandas.DataFrame` or `numpy.ndarray`
+        Observations (predictors).
+    n_top : int, default=7
+        Top n features to be displayed. The importances of the rest are aggregated and displayed under the tag "Rest".
+    output_path : str, default=None
+        Path to save figure as image.
+    savefig_kws : dict, default=None
+        Save figure options.
+    """
     si = utils.shap_importances(model, X)
     low_imp = si.loc[n_top:]
     si = si.loc[:n_top - 1]
@@ -28,27 +45,41 @@ def plot_shap_importances(model, X, n_top=7, output_path=None, savefig_kws=None)
     savefig(output_path, savefig_kws)
 
 
-# TODO: Document
-def plot_confusion_matrix(cf, group_names=None, categories='auto', count=True, percent=True, sum_stats=True,
-                          xyticks=True, xyplotlabels=True, figsize=None, cmap='Blues', title=None,
-                          output_path=None, savefig_kws=None):
+def plot_confusion_matrix(cf, group_names=None, count=True, percent=True, sum_stats=True, xyticks=True,
+                          xyplotlabels=True, figsize=None, cmap='Blues', title=None, output_path=None,
+                          savefig_kws=None):
     """
-    This function will make a pretty plot of an sklearn Confusion Matrix cm using a Seaborn heatmap visualization.
-    Arguments
-    ---------
-    cf:            confusion matrix to be passed in
-    group_names:   List of strings that represent the labels row by row to be shown in each square.
-    categories:    List of strings containing the categories to be displayed on the x,y axis. Default is 'auto'
-    count:         If True, show the raw number in the confusion matrix. Default is True.
-    cbar:          If True, show the color bar. The cbar values are based off the values in the confusion matrix.
-                   Default is True.
-    xyticks:       If True, show x and y ticks. Default is True.
-    xyplotlabels:  If True, show 'True Label' and 'Predicted Label' on the figure. Default is True.
-    figsize:       Tuple representing the figure size. Default will be the matplotlib rcParams value.
-    cmap:          Colormap of the values displayed from matplotlib.pyplot.cm. Default is 'Blues'
-                   See http://matplotlib.org/examples/color/colormaps_reference.html
+    This function makes a pretty plot of an sklearn Confusion Matrix cf using a Seaborn heatmap visualization.
 
-    title:         Title for the heatmap. Default is None.
+    Inspired by : https://github.com/DTrimarchi10/confusion_matrix/blob/master/cf_matrix.py
+
+    Parameters
+    ---------
+    cf : `pandas.DataFrame`
+        Confusion matrix to be passed in.
+    group_names : list, default=None
+        List of strings that represent the labels row by row to be shown in each square.
+    count : boolean, default=True
+        If True, show the raw number in the confusion matrix.
+    percent : boolean, default=True
+        If True, show the percentages in the confusion matrix.
+    sum_stats : boolean, default=True
+        If True, show precision and recall per class, and global accuracy, appended to the matrix.
+    xyticks : boolean, default=True
+        If True, show x and y ticks.
+    xyplotlabels : boolean, default=True
+        f True, show 'Observed values' and 'Predicted values' on the figure.
+    figsize : tuple, default=None
+        Tuple representing the figure size. Default will be the matplotlib default value.
+    cmap : `matplotlib.pyplot.cm`, default='Blues'
+        Colormap of the values displayed from matplotlib.pyplot.cm. Default is 'Blues'
+        See http://matplotlib.org/examples/color/colormaps_reference.html
+    title : str, feault=None
+        Title for the heatmap.
+    output_path : str, default=None
+        Path to save figure as image.
+    savefig_kws : dict, default=None
+        Save figure options.
     """
 
     # CODE TO GENERATE TEXT INSIDE EACH SQUARE
@@ -59,7 +90,7 @@ def plot_confusion_matrix(cf, group_names=None, categories='auto', count=True, p
     else:
         group_labels = blanks
 
-    flatten = cf.flatten()
+    flatten = cf.values.flatten()
     if count:
         # Format of totals is different
         if sum_stats:
@@ -74,24 +105,30 @@ def plot_confusion_matrix(cf, group_names=None, categories='auto', count=True, p
     if percent:
         # Format of totals is different
         if sum_stats:
-            group_percentages = ["{0:.2%}".format(flatten[i] / np.sum(cf)) if (
+            group_percentages = ["{0:.2%}".format(flatten[i] / np.sum(cf.values)) if (
                         i % cf.shape[0] < cf.shape[0] - 1 and i // cf.shape[0] < cf.shape[0] - 1)
                                  else "" for i in range(len(flatten))]
         else:
-            group_percentages = ["{0:.2%}".format(value) for value in cf.flatten() / np.sum(cf)]
+            group_percentages = ["{0:.2%}".format(value) for value in cf.values.flatten() / np.sum(cf.values)]
     else:
         group_percentages = blanks
 
     box_labels = [f"{v1}{v2}{v3}".strip() for v1, v2, v3 in zip(group_labels, group_counts, group_percentages)]
     box_labels = np.asarray(box_labels).reshape(cf.shape[0], cf.shape[1])
 
-    if not xyticks:
-        # Do not show categories if xyticks is False
-        categories = False
+    # Cluster names as tick labels. If precision, recall, and global accuracy are included, no tick label is displayed
+    # for them
+    xyticklabels = False
+    if xyticks:
+        if sum_stats:
+            xyticklabels = list(map(lambda x: x[1], cf.columns[:-1])) + ['']
+        else:
+            xyticklabels = list(map(lambda x: x[1], cf.columns))
 
     # MAKE THE HEATMAP VISUALIZATION
     ax, fig = plt.subplots(figsize=figsize)
-    sns.heatmap(cf, annot=box_labels, fmt="", cmap=cmap, cbar=False, xticklabels=categories, yticklabels=categories)
+    sns.heatmap(cf.values, annot=box_labels, fmt="", cmap=cmap, cbar=False, xticklabels=xyticklabels,
+                yticklabels=xyticklabels)
 
     # Remove colors from totals
     quadmesh = ax.findobj(QuadMesh)[0]
@@ -114,6 +151,22 @@ def plot_confusion_matrix(cf, group_names=None, categories='auto', count=True, p
 
 
 def plot_roc_curves(X, y, model, output_path=None, savefig_kws=None):
+    """
+    Plots ROC curve for every class.
+
+    Parameters
+    ---------
+    X : `pandas.DataFrame` or `numpy.ndarray`
+        Predictor values.
+    y : `pandas.Series` or `numpy.array`
+        Target values.
+    model : `scikit-learn.Estimator`
+        Classification model (already trained).
+    output_path : str, default=None
+        Path to save figure as image.
+    savefig_kws : dict, default=None
+        Save figure options.
+    """
     classes = np.sort(np.unique(y))
     y_score = model.predict_proba(X)
     y_test_b = label_binarize(y, classes=classes)

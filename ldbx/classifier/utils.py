@@ -17,10 +17,11 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
+
 def shap_importances(classifier, X):
     """
     Computes shap importance values as the combined average of the absolute values of the shap values
-    for all classes
+    for all classes.
 
     Parameters
     ----------
@@ -31,7 +32,7 @@ def shap_importances(classifier, X):
 
     Returns
     ----------
-    importances: `pandas.DataFrame`
+    importances : `pandas.DataFrame`
         DataFrame with predictors and their corresponding importance.
     """
     explainer = shap.Explainer(classifier)
@@ -43,7 +44,6 @@ def shap_importances(classifier, X):
     return importances
 
 
-# TODO: Optimal classifier should be for the class method, not here
 def feature_selection(df, original_features, target, classifier, features_to_keep=[], hi_corr_kws=None,
                       rfecv_kws=None):
     """
@@ -73,8 +73,8 @@ def feature_selection(df, original_features, target, classifier, features_to_kee
         and `scikit-learn.Model`.
     hi_corr_kws : dictionary, default=None
         Dictionary for highly-correlated feature calculation. Supported parameters:
-        - corr_thres: Correlation threshold, default=0.8
-        - method: Correlation method, default='pearson'
+        - corr_thres : Correlation threshold, default=0.8
+        - method : Correlation method, default='pearson'
     rfecv_kws : dictionary, default=None
         Dictionary for RFECV.
 
@@ -142,28 +142,28 @@ def feature_selection(df, original_features, target, classifier, features_to_kee
 
 def hyperparameter_tuning(X_train, y_train, classifier, param_grid, gridsearch_kws=None):
     """
-        Runs grid search with cross-validation for hyperparameter tuning.
+    Runs grid search with cross-validation for hyperparameter tuning.
 
-        Parameters
-        ----------
-        X_train : `np.ndarray` or `pandas.DataFrame`
-            Training set.
-        y_train : `numpy.array` or list
-            Training target values.
-        classifier : estimator, default=None
-            Should be an instance of `scikit-learn.Estimator`, `scikit-learn.Predictor`, `scikit-learn.Transformer`,
-            and `scikit-learn.Model`.
-            If none is passed a `sklearn.ensemble.RandomForestClassifier` model is used.
-        param_grid : dictionary
-            Dictionary with the different hyperparameters and their corresponding values to be evaluated.
-        gridsearch_kws : dictionary, default=None
-            Dictionary for grid search.
+    Parameters
+    ----------
+    X_train : `np.ndarray` or `pandas.DataFrame`
+        Training set.
+    y_train : `numpy.array` or list
+        Training target values.
+    classifier : estimator, default=None
+        Should be an instance of `scikit-learn.Estimator`, `scikit-learn.Predictor`, `scikit-learn.Transformer`,
+        and `scikit-learn.Model`.
+        If none is passed a `sklearn.ensemble.RandomForestClassifier` model is used.
+    param_grid : dictionary
+        Dictionary with the different hyperparameters and their corresponding values to be evaluated.
+    gridsearch_kws : dictionary, default=None
+        Dictionary for grid search.
 
-        Returns
-        ----------
-        grid_result : `sklearn.model_selection.GridSearchCV`
-            Instance of fitted estimator.
-        """
+    Returns
+    ----------
+    grid_result : `sklearn.model_selection.GridSearchCV`
+        Instance of fitted estimator.
+    """
     if gridsearch_kws is None:
         gridsearch_kws = dict(n_jobs=-1, cv=3)
     grid_search = GridSearchCV(classifier, param_grid, **gridsearch_kws)
