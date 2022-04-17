@@ -26,12 +26,12 @@ def plot_score_comparison(scores, cluster_range, metric_name='Weighted sum of sq
         Dictionary <algorithm, list of scores>
     cluster_range : [min (int), max (int))
         Range of number of clusters computed. This will be displayed on the x-axis.
-    metric_name: str, default='Weighted sum of squared distances'
+    metric_name : str, default='Weighted sum of squared distances'
         Name of the metric used for comparison. This will be displayed on the y-label.
         Default is 'Weighted sum of squared distances', which corresponds to inertia.
-    output_path: str, default=None
+    output_path : str, default=None
         Path to save figure as image.
-    savefig_kws: dict, default=None
+    savefig_kws : dict, default=None
         Save figure options.
     """
     plt.figure(figsize=(10, 5))
@@ -59,12 +59,12 @@ def plot_optimal_components_normalized(scores, max_clusters, metric_name, output
         Dictionary <algorithm, list of scores>
     max_clusters : int
         Maximum number of clusters allowed.
-    metric_name: str, default='Weighted sum of squared distances'
+    metric_name : str, default='Weighted sum of squared distances'
         Name of the metric used for comparison. This will be displayed on the y-label.
         Default is 'Weighted sum of squared distances', which corresponds to inertia.
-    output_path: str, default=None
+    output_path : str, default=None
         Path to save figure as image.
-    savefig_kws: dict, default=None
+    savefig_kws : dict, default=None
         Save figure options.
     """
     fig, ax = plt.subplots(figsize=(8, 5))
@@ -82,9 +82,9 @@ def plot_clustercount(df, output_path=None, savefig_kws=None):
     ----------
     df : `pandas.DataFrame`
         DataFrame containing at least a column named 'cluster_cat' with the cluster labels.
-    output_path: str, default=None
+    output_path : str, default=None
         Path to save figure as image.
-    savefig_kws: dict, default=None
+    savefig_kws : dict, default=None
         Save figure options.
     """
     plt.figure(figsize=(df['cluster_cat'].nunique(), 5))
@@ -116,9 +116,9 @@ def plot_cluster_means_to_global_means_comparison(df, dimensions, xlabel=None, y
     levels : list or `numpy.array`
         Values to be used as cuts for color intensity.
         Default values: [-0.50, -0.32, -0.17, -0.05, 0.05, 0.17, 0.32, 0.50]
-    output_path: str, default=None
+    output_path : str, default=None
         Path to save figure as image.
-    savefig_kws: dict, default=None
+    savefig_kws : dict, default=None
         Save figure options.
     """
     df_diff = compare_cluster_means_to_global_means(df, dimensions)
@@ -167,9 +167,9 @@ def plot_distribution_comparison_by_cluster(df, cluster_labels, xlabel=None, yla
         x-label name/description.
     ylabel : str, default=None
         y-label name/description.
-    output_path: str, default=None
+    output_path : str, default=None
         Path to save figure as image.
-    savefig_kws: dict, default=None
+    savefig_kws : dict, default=None
         Save figure options.
     """
     nclusters = len(np.unique(cluster_labels))
@@ -228,9 +228,9 @@ def plot_clusters_2D(x, y, hue, df, style_kwargs=dict(), output_path=None, savef
          - vline_color : color to be used for vertical line (used for plotting x mean value). default='#11A579'
          - hline_color : color to be used for horizontal line (used for plotting y mean value). default='#332288'
          - kdeplot : boolean to display density area of points (using seabonr.kdeplot). default=True
-    output_path: str, default=None
+    output_path : str, default=None
         Path to save figure as image.
-    savefig_kws: dict, default=None
+    savefig_kws : dict, default=None
         Save figure options.
     """
     # Style params
@@ -299,9 +299,9 @@ def plot_cat_distribution_by_cluster(ct, cat_label=None, cluster_label=None, out
         Name/Description of the categorical variable to be displayed.
     cluster_label : str, default=None
         Name/Description of the cluster variable to be displayed.
-    output_path: str, default=None
+    output_path : str, default=None
         Path to save figure as image.
-    savefig_kws: dict, default=None
+    savefig_kws : dict, default=None
         Save figure options.
     """
     plt.figure(figsize=(11, 0.625 * len(ct.index)))

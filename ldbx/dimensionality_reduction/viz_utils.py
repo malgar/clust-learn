@@ -70,11 +70,11 @@ def plot_explained_variance(explained_variance_ratio, thres=0.5, plots='all', ou
         Note it is assumed this is provided in descending order.
     thres : float, default=0.5
         Minimum explained cumulative variance ratio.
-    plots: str or list, default='all'
+    plots : str or list, default='all'
         The following plots are supported: ['cumulative', 'ratio', 'normalized']
-    output_path: str, default=None
+    output_path : str, default=None
         Path to save figure as image.
-    savefig_kws: dict, default=None
+    savefig_kws : dict, default=None
         Save figure options.
     """
 
@@ -121,18 +121,18 @@ def plot_num_main_contributors(df, df_trans, thres=0.5, n_contributors=5, dim_id
     ----------
     df : `pandas.DataFrame`
         DataFrame with original numerical variables.
-    df_trans: `pandas.DataFrame`
+    df_trans : `pandas.DataFrame`
         DataFrame with derived variables.
     thres : float, default=0.5
         Minimum Pearson correlation coefficient to consider an original and a derived variable to be strongly related.
-    n_contributors: int, default=5
+    n_contributors : int, default=5
         Number of contributors by derived variables (the ones with the strongest correlation coefficient
         are shown).
-    dim_idx: int, default=None
+    dim_idx : int, default=None
         In case only main contributors for derived variable in column position dim_idx are retrieved (starts at 0).
-    output_path: str, default=None
+    output_path : str, default=None
         Path to save figure as image.
-    savefig_kws: dict, default=None
+    savefig_kws : dict, default=None
         Save figure options.
     """
 
@@ -188,18 +188,18 @@ def plot_cat_main_contributor_distribution(df, df_trans, thres=0.14, n_contribut
     ----------
     df : `pandas.DataFrame`
         DataFrame with original categorical variables.
-    df_trans: `pandas.DataFrame`
+    df_trans : `pandas.DataFrame`
         DataFrame with derived variables.
     thres : float, default=0.5
          Minimum correlation ratio to consider an original and a derived variable to be strongly related.
     n_contributors: int, default=5
         Number of contributors by derived variables (the ones with the strongest correlation coefficient
         are shown).
-    dim_idx: int, default=None
+    dim_idx : int, default=None
         In case only main contributors for derived variable in column position dim_idx are retrieved (starts at 0).
-    output_path: str, default=None
+    output_path : str, default=None
         Path to save figure as image.
-    savefig_kws: dict, default=None
+    savefig_kws : dict, default=None
         Save figure options.
     """
     dim_name = ''
@@ -269,9 +269,9 @@ def plot_cumulative_explained_var_comparison(explained_variance_ratio1, explaine
         Name of technique 2. (For styling purposes).
     thres : float, default=None
          Reference threshold for cumulative explained variance ratio. (For styling purposes).
-    output_path: str, default=None
+    output_path : str, default=None
         Path to save figure as image.
-    savefig_kws: dict, default=None
+    savefig_kws : dict, default=None
         Save figure options.
     """
     fig, ax = plt.subplots(figsize=(7, 5))

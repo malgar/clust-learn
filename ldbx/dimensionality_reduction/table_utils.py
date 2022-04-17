@@ -66,27 +66,27 @@ def num_main_contributors(df, df_trans, thres=0.5, n_contributors=None, dim_idx=
         DataFrame with original numerical variables.
     df_trans : `pandas.DataFrame`
         DataFrame with derived variables.
-    thres: float, default=0.5
+    thres : float, default=0.5
         Correlation coefficient threshold to consider one original variable to be a main contributor of a derived
         variable.
-    n_contributors: float, default=None
+    n_contributors : float, default=None
         If n_contributors is passed, the n_contributors original variables with the highest correlation coefficient
         are selected for every derived variable.
         If n_contributors is passed, the correlation coefficient threshold (thres) is ignored.
-    dim_idx: int, default=None
+    dim_idx : int, default=None
         In case only main contributors for derived variable in column position dim_idx are retrieved (starts at 0).
     component_description: str or list
         Description of derived variables. It might be of interest to show a description of the new variables
         on a table for explainability purposes.
-    col_description: `pandas.DataFrame`
+    col_description : `pandas.DataFrame`
         DataFrame with two columns: First one with original variable names, and a second one with the description.
         This is also used for explainability purposes.
-    output_path: str
+    output_path : str, default=None
         If an output_path is passed, the resulting DataFame is saved as a CSV file.
 
     Returns
     ----------
-    mc: `pandas.DataFrame`
+    mc : `pandas.DataFrame`
         DataFrame with the main contributors of every derived variable.
     """
     if dim_idx is not None:
@@ -146,27 +146,27 @@ def cat_main_contributors(df, df_trans, thres=0.14, n_contributors=None, dim_idx
         DataFrame with original categorical variables.
     df_trans : `pandas.DataFrame`
         DataFrame with derived variables.
-    thres: float, default=0.14
+    thres : float, default=0.14
         Correlation ratio threshold to consider one original variable to be a main contributor of a derived
         variable.
-    n_contributors: float, default=None
+    n_contributors : float, default=None
         If n_contributors is passed, the n_contributors original variables with the highest correlation ratio
         are selected for every derived variable.
         If n_contributors is passed, the correlation ratio threshold (thres) is ignored.
-    dim_idx: int, default=None
+    dim_idx : int, default=None
         In case only main contributors for derived variable in column position dim_idx are retrieved (starts at 0).
-    component_description: str or list
+    component_description : str or list
         Description of derived variables. It might be of interest to show a description of the new variables
         on a table for explainability purposes.
-    col_description: `pandas.DataFrame`
+    col_description : `pandas.DataFrame`
         DataFrame with two columns: First one with original variable names, and a second one with the description.
         This is also used for explainability purposes.
-    output_path: str
+    output_path : str, default=None
         If an output_path is passed, the resulting DataFame is saved as a CSV file.
 
     Returns
     ----------
-    mc: `pandas.DataFrame`
+    mc : `pandas.DataFrame`
         DataFrame with the main contributors of every derived variable.
     """
     if dim_idx is not None:
@@ -223,21 +223,21 @@ def cat_main_contributors_stats(df, df_trans, thres=0.14, n_contributors=None, d
         DataFrame with original categorical variables.
     df_trans : `pandas.DataFrame`
         DataFrame with derived variables.
-    thres: float, default=0.14
+    thres : float, default=0.14
         Correlation ratio threshold to consider one original variable to be a main contributor of a derived
         variable.
-    n_contributors: float, default=None
+    n_contributors : float, default=None
         If n_contributors is passed, the n_contributors original variables with the highest correlation ratio
         are selected for every derived variable.
         If n_contributors is passed, the correlation ratio threshold (thres) is ignored.
-    dim_idx: int, default=None
+    dim_idx : int, default=None
         In case only main contributors for derived variable in column position dim_idx are retrieved (starts at 0).
-    output_path: str
+    output_path : str, default=None
         If an output_path is passed, the resulting DataFame is saved as a CSV file.
 
     Returns
     ----------
-    stats: `pandas.DataFrame`
+    stats : `pandas.DataFrame`
         DataFrame with the statistics.
     """
     if dim_idx is not None:

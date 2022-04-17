@@ -122,17 +122,17 @@ class Clustering(base.BaseEstimator, base.TransformerMixin):
             Metric to use in order to compare different algorithms and, if applicable,to calculate the optimal number
             of clusters.
             By default, inertia is used. Supported metrics: ['inertia', 'davies_bouldin_score', 'silhouette_score']
-        max_clusters: int, default=10
+        max_clusters : int, default=10
             In case of optimal search, this parameter limits the maximum number of clusters allowed.
-        prefix: str, default=None
+        prefix : str, default=None
             Used for cluster naming. Naming format: `f'{prefix}_{x}'`
-        weights: `numpy.array`, default=None
+        weights : `numpy.array`, default=None
             In case observations have different weights.
             *Note this is not implemented yet.*
 
         Returns
         ----------
-        labels_: `numpy.array`
+        labels_ : `numpy.array`
             Cluster label of each observation.
         """
         if metric not in __metrics__:
@@ -179,17 +179,17 @@ class Clustering(base.BaseEstimator, base.TransformerMixin):
         variables : str or list, default=None
             List of variables (internal or external) for describing clusters. This parameter is optional and should
             be used when only a subset of the variable is of interest.
-        cluster_filter: str or list, default=None
+        cluster_filter : str or list, default=None
             In case the descriptive statistics of interest only applies to a subset of the calculated clusters.
-        statistics: str or list, default=['mean', 'median', 'std']
+        statistics : str or list, default=['mean', 'median', 'std']
             Statistics to use for describing clusters.
             *Note any statistics supported by Pandas can be used. This includes the `describe` function*
-        output_path: str, default=None
+        output_path : str, default=None
             If an output_path is passed, the resulting DataFame is saved as a CSV file.
 
         Returns
         ----------
-        res: `pandas.DataFrame`
+        res : `pandas.DataFrame`
             DataFrame with the cluster description.
         """
         if df_ext is not None:
@@ -239,7 +239,7 @@ class Clustering(base.BaseEstimator, base.TransformerMixin):
 
         Returns
         ----------
-        freq: `pandas.DataFrame`
+        freq : `pandas.DataFrame`
             DataFrame with a cluster description based on the passed categorical variable.
         """
         freq = pd.crosstab(index=self.df['cluster_cat'], columns=cat_array, rownames=['Clusters'], colnames=[cat_name])
@@ -269,7 +269,7 @@ class Clustering(base.BaseEstimator, base.TransformerMixin):
 
         Returns
         ----------
-        df_agg_diff: `pandas.DataFrame`
+        df_agg_diff : `pandas.DataFrame`
             DataFrame with the comparison.
         """
         return compare_cluster_means_to_global_means(self.df, self.dimensions, output_path=None)
@@ -288,14 +288,14 @@ class Clustering(base.BaseEstimator, base.TransformerMixin):
         vars_test : str, default=None
             List of variables (internal or external) tu run tests on. This parameter is optional and should
             be used when only a subset of the variable is of interest.
-        cluster_filter: str or list, default=None
+        cluster_filter : str or list, default=None
             In case the tests should only be applied on a subset of  clusers.
         output_path : str, default=None
             If an output_path is passed, the resulting DataFame is saved as a CSV file.
 
         Returns
         ----------
-        res: `pandas.DataFrame`
+        res : `pandas.DataFrame`
             DataFrame with the corresponding test statistics.
         """
         if df_test is not None:
@@ -342,7 +342,7 @@ class Clustering(base.BaseEstimator, base.TransformerMixin):
 
         Returns
         ----------
-        dict: dictionary
+        dict : dictionary
             Dictionary with the corresponding test statistics.
         """
         contingency_t = self.describe_clusters_cat(cat_array)
@@ -355,9 +355,9 @@ class Clustering(base.BaseEstimator, base.TransformerMixin):
 
         Parameters
         ----------
-        output_path: str, default=None
+        output_path : str, default=None
             Path to save figure as image.
-        savefig_kws: dict, default=None
+        savefig_kws : dict, default=None
             Save figure options.
         """
         metric_name = METRIC_NAMES[self.metric]
@@ -376,9 +376,9 @@ class Clustering(base.BaseEstimator, base.TransformerMixin):
 
         Parameters
         ----------
-        output_path: str, default=None
+        output_path : str, default=None
             Path to save figure as image.
-        savefig_kws: dict, default=None
+        savefig_kws : dict, default=None
             Save figure options.
         """
         if len(self.scores_[self.optimal_config_[0]]) > 1:
@@ -395,9 +395,9 @@ class Clustering(base.BaseEstimator, base.TransformerMixin):
 
         Parameters
         ----------
-        output_path: str, default=None
+        output_path : str, default=None
             Path to save figure as image.
-        savefig_kws: dict, default=None
+        savefig_kws : dict, default=None
             Save figure options.
         """
         plot_clustercount(self.df, output_path, savefig_kws)
@@ -417,9 +417,9 @@ class Clustering(base.BaseEstimator, base.TransformerMixin):
         levels : list or `numpy.array`
             Values to be used as cuts for color intensity.
             Default values: [-0.50, -0.32, -0.17, -0.05, 0.05, 0.17, 0.32, 0.50]
-        output_path: str, default=None
+        output_path : str, default=None
             Path to save figure as image.
-        savefig_kws: dict, default=None
+        savefig_kws : dict, default=None
             Save figure options.
         """
         plot_cluster_means_to_global_means_comparison(self.df, self.dimensions, xlabel, ylabel, levels, output_path,
@@ -440,9 +440,9 @@ class Clustering(base.BaseEstimator, base.TransformerMixin):
             x-label name/description.
         ylabel : str, default=None
             y-label name/description.
-        output_path: str, default=None
+        output_path : str, default=None
             Path to save figure as image.
-        savefig_kws: dict, default=None
+        savefig_kws : dict, default=None
             Save figure options.
         """
         if df_ext is None:
@@ -472,9 +472,9 @@ class Clustering(base.BaseEstimator, base.TransformerMixin):
              - vline_color : color to be used for vertical line (used for plotting x mean value). default='#11A579'
              - hline_color : color to be used for horizontal line (used for plotting y mean value). default='#332288'
              - kdeplot : boolean to display density area of points (using seabonr.kdeplot). default=True
-        output_path: str, default=None
+        output_path : str, default=None
             Path to save figure as image.
-        savefig_kws: dict, default=None
+        savefig_kws : dict, default=None
             Save figure options.
         """
         if isinstance(coor1, int):
@@ -509,9 +509,9 @@ class Clustering(base.BaseEstimator, base.TransformerMixin):
             Name/Description of the categorical variable to be displayed.
         cluster_label : str, default=None
             Name/Description of the cluster variable to be displayed.
-        output_path: str, default=None
+        output_path : str, default=None
             Path to save figure as image.
-        savefig_kws: dict, default=None
+        savefig_kws : dict, default=None
             Save figure options.
         """
         ct = self.describe_clusters_cat(cat_array, normalize=True)

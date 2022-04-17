@@ -18,7 +18,7 @@ def weighted_sum_of_squared_distances(df, cluster_arr, weights=None):
 
     Returns
     ----------
-    wssd: float
+    wssd : float
         Weighted sum of squared distances
     """
 

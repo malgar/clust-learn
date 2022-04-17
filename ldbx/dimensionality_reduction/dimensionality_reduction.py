@@ -18,9 +18,9 @@ class DimensionalityReduction(base.BaseEstimator, base.TransformerMixin):
     ----------
     df : `pandas.DataFrame`
             DataFrame containing the data.
-    num_vars: string, list, series, or vector array
+    num_vars : string, list, series, or vector array
             Numerical variable name(s).
-    cat_vars: string, list, series, or vector array
+    cat_vars : string, list, series, or vector array
             Categorical variable name(s).
     num_algorithm : str, default='pca'
         Technique to be used for dimensionality reduction for numerical variables.
@@ -28,9 +28,9 @@ class DimensionalityReduction(base.BaseEstimator, base.TransformerMixin):
     cat_algorithm : str, default='mca'
         Technique to be used for dimensionality reduction for categorical variables.
         By default, MCA (Multiple Correspondence Analysis) is used.
-    num_kwargs: dictionary
+    num_kwargs : dictionary, default=None
         Additional keyword arguments to pass to the model used for numerical variables.
-    cat_kwargs: dictionary
+    cat_kwargs : dictionary, default=None
         Additional keyword arguments to pass to the model used for categorical variables.
     """
 
@@ -86,14 +86,14 @@ class DimensionalityReduction(base.BaseEstimator, base.TransformerMixin):
         n_components : int, default=None
             Number components to compute. If None, then `n_components` is set to the number of features.
             Note this number is approximate because numerical and categorical vars are treated independently.
-        min_explained_variance_ratio: float, default 0.5
+        min_explained_variance_ratio : float, default=0.5
             Minimum explained variance ratio to be achieved. If `n_components` is not None,
             `min_explained_variance_ratio` will be ignored.
             If None: optimal
 
         Returns
         ----------
-        trans: `pandas.DataFrame`
+        trans : `pandas.DataFrame`
             DataFrame with the transformed data.
         """
 
@@ -196,22 +196,22 @@ class DimensionalityReduction(base.BaseEstimator, base.TransformerMixin):
 
         Parameters
         ----------
-        thres: float, default=0.5
+        thres : float, default=0.5
             Correlation coefficient threshold to consider one original variable to be a main contributor of a derived
             variable.
-        n_contributors: float, default=None
+        n_contributors : float, default=None
             If n_contributors is passed, the n_contributors original variables with the highest correlation coefficient
             are selected for every derived variable.
             If n_contributors is passed, the correlation coefficient threshold (thres) is ignored.
-        dim_idx: int, default=None
+        dim_idx : int, default=None
             In case only main contributors for derived variable in column position dim_idx are retrieved (starts at 0).
-        component_description: str or list
+        component_description : str or list
             Description of derived variables. It might be of interest to show a description of the new variables
             on a table for explainability purposes.
-        col_description: `pandas.DataFrame`
+        col_description : `pandas.DataFrame`
             DataFrame with two columns: First one with original variable names, and a second one with the description.
             This is also used for explainability purposes.
-        output_path: str
+        output_path : str, default=None
             If an output_path is passed, the resulting DataFame is saved as a CSV file.
 
         Returns
@@ -230,22 +230,22 @@ class DimensionalityReduction(base.BaseEstimator, base.TransformerMixin):
 
         Parameters
         ----------
-        thres: float, default=0.14
+        thres : float, default=0.14
             Correlation ratio threshold to consider one original variable to be a main contributor of a derived
             variable.
-        n_contributors: float, default=None
+        n_contributors : float, default=None
             If n_contributors is passed, the n_contributors original variables with the highest correlation ratio
             are selected for every derived variable.
             If n_contributors is passed, the correlation ratio threshold (thres) is ignored.
-        dim_idx: int, default=None
+        dim_idx : int, default=None
             In case only main contributors for derived variable in column position dim_idx are retrieved (starts at 0).
-        component_description: str or list
+        component_description : str or list
             Description of derived variables. It might be of interest to show a description of the new variables
             on a table for explainability purposes.
-        col_description: `pandas.DataFrame`
+        col_description : `pandas.DataFrame`
             DataFrame with two columns: First one with original variable names, and a second one with the description.
             This is also used for explainability purposes.
-        output_path: str
+        output_path : str, default=None
             If an output_path is passed, the resulting DataFame is saved as a CSV file.
 
         Returns
@@ -263,16 +263,16 @@ class DimensionalityReduction(base.BaseEstimator, base.TransformerMixin):
 
         Parameters
         ----------
-        thres: float, default=0.14
+        thres : float, default=0.14
             Correlation ratio threshold to consider one original variable to be a main contributor of a derived
             variable.
-        n_contributors: float, default=None
+        n_contributors : float, default=None
             If n_contributors is passed, the n_contributors original variables with the highest correlation ratio
             are selected for every derived variable.
             If n_contributors is passed, the correlation ratio threshold (thres) is ignored.
-        dim_idx: int, default=None
+        dim_idx : int, default=None
             In case only main contributors for derived variable in column position dim_idx are retrieved (starts at 0).
-        output_path: str
+        output_path : str, default=None
             If an output_path is passed, the resulting DataFame is saved as a CSV file.
 
         Returns
@@ -291,11 +291,11 @@ class DimensionalityReduction(base.BaseEstimator, base.TransformerMixin):
         ----------
         thres : float, default=0.5
             Minimum explained cumulative variance ratio.
-        plots: str or list, default='all'
+        plots : str or list, default='all'
             The following plots are supported: ['cumulative', 'ratio', 'normalized']
-        output_path: str, default=None
+        output_path : str, default=None
             Path to save figure as image.
-        savefig_kws: dict, default=None
+        savefig_kws : dict, default=None
             Save figure options.
         """
         plot_explained_variance(self.pca.explained_variance_ratio_, thres, plots, output_path, savefig_kws)
@@ -308,11 +308,11 @@ class DimensionalityReduction(base.BaseEstimator, base.TransformerMixin):
         ----------
         thres : float, default=0.5
             Minimum explained cumulative variance ratio.
-        plots: str or list, default='all'
+        plots : str or list, default='all'
             The following plots are supported: ['cumulative', 'ratio', 'normalized']
-        output_path: str, default=None
+        output_path : str, default=None
             Path to save figure as image.
-        savefig_kws: dict, default=None
+        savefig_kws : dict, default=None
             Save figure options.
         """
         explained_variance_ratio = self.cat_model.explained_inertia_ / self.cat_model.explained_inertia_.sum()
@@ -328,14 +328,14 @@ class DimensionalityReduction(base.BaseEstimator, base.TransformerMixin):
         thres : float, default=0.5
             Minimum Pearson correlation coefficient to consider an original and a derived variable to be strongly
             related.
-        n_contributors: int, default=5
+        n_contributors : int, default=5
             Number of contributors by derived variables (the ones with the strongest correlation coefficient
             are shown).
-        dim_idx: int, default=None
+        dim_idx : int, default=None
             In case only main contributors for derived variable in column position dim_idx are retrieved (starts at 0).
-        output_path: str, default=None
+        output_path : str, default=None
             Path to save figure as image.
-        savefig_kws: dict, default=None
+        savefig_kws : dict, default=None
             Save figure options.
         """
         plot_num_main_contributors(self.df[self.num_vars], self.num_trans_, thres, n_contributors, dim_idx, output_path,
@@ -351,14 +351,14 @@ class DimensionalityReduction(base.BaseEstimator, base.TransformerMixin):
         ----------
         thres : float, default=0.5
              Minimum correlation ratio to consider an original and a derived variable to be strongly related.
-        n_contributors: int, default=5
+        n_contributors : int, default=5
             Number of contributors by derived variables (the ones with the strongest correlation coefficient
             are shown).
-        dim_idx: int, default=None
+        dim_idx : int, default=None
             In case only main contributors for derived variable in column position dim_idx are retrieved (starts at 0).
-        output_path: str, default=None
+        output_path : str, default=None
             Path to save figure as image.
-        savefig_kws: dict, default=None
+        savefig_kws : dict, default=None
             Save figure options.
         """
         plot_cat_main_contributor_distribution(self.df[self.cat_vars], self.cat_trans_, thres, n_contributors, dim_idx,
@@ -372,9 +372,9 @@ class DimensionalityReduction(base.BaseEstimator, base.TransformerMixin):
         ----------
         thres : float, default=None
              Reference threshold for cumulative explained variance ratio. (For styling purposes).
-        output_path: str, default=None
+        output_path : str, default=None
             Path to save figure as image.
-        savefig_kws: dict, default=None
+        savefig_kws : dict, default=None
             Save figure options.
         """
         plot_cumulative_explained_var_comparison(self.pca.explained_variance_ratio_.cumsum(),
