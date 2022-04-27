@@ -8,12 +8,39 @@ from matplotlib.ticker import MaxNLocator
 
 
 def compute_high_corr_pairs(df, corr_thres=0.8, method='pearson'):
-    hi_corr = df.corr(method=method).replace(1,0)
+    hi_corr = df.corr(method=method).replace(1, 0)
     hi_corr = hi_corr[np.abs(hi_corr) > corr_thres]
     hi_corr = pd.melt(hi_corr.reset_index(), id_vars='index', value_vars=df.columns, var_name='var2',
                       value_name='corr_coeff').dropna().rename(columns={'index': 'var1'})\
         .sort_values('corr_coeff', ascending=False).reset_index(drop=True)
     return hi_corr
+
+
+def cross_corr_ratio(df1, df2):
+    """
+    Calculates the correlation ratio of every column in df1 with every column in df2
+    https://en.wikipedia.org/wiki/Correlation_ratio
+
+    Parameters
+    ----------
+    df1 : `pandas.DataFrame`
+    df2 : `pandas.DataFrame`
+
+    Returns
+    ----------
+    corr_df: `pandas.DataFrame`
+        DataFrame with the correlation ratio of every pair of columns from df1 and df2.
+    """
+    corr_coeffs = []
+    df_aux = pd.concat([df1, df2], axis=1)
+    for col in df1.columns:
+        col_corr_coeffs = []
+        for dv in df2.columns:
+            col_corr_coeffs.append(pg.anova(data=df_aux, dv=dv, between=col)['np2'].iloc[0])
+        corr_coeffs.append(col_corr_coeffs)
+
+    corr_df = pd.DataFrame(corr_coeffs, index=df1.columns, columns=df2.columns).transpose()
+    return corr_df
 
 
 def get_axis(i, axs, ncols, nrows):
