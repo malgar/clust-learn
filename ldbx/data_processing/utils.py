@@ -36,6 +36,7 @@ def mixed_imputation_pairs(df, num_vars, cat_vars, cross_corr_thres=0.5):
 
     # For every pair <cat_var, num_var>, we're interested in the relationship in both ways
     pairs = pd.concat([pairs, pairs.rename(columns={'var1': 'var2', 'var2': 'var1'})], ignore_index=True)
+    pairs = pairs.sort_values(['value', 'var1', 'var2'], ascending=[False, True, True]).reset_index(drop=True)
     return pairs
 
 
@@ -50,7 +51,8 @@ def cat_imputation_pairs(df, mi_thres=0.6):
                 data.append((cat_vars[i], cat_vars[j], mis))
                 data.append((cat_vars[j], cat_vars[i], mis))
 
-    cat_pairs = pd.DataFrame(data=data, columns=['var1', 'var2', 'value'])
+    cat_pairs = pd.DataFrame(data=data, columns=['var1', 'var2', 'value']).sort_values(
+        ['value', 'var1', 'var2'], ascending=[False, True, True]).reset_index(drop=True)
     return cat_pairs
 
 
@@ -71,7 +73,7 @@ def imputation_pairs(df, num_vars, cat_vars, num_kws=None, mixed_kws=None, cat_k
     final_pairs = final_pairs.drop(columns='value')
 
     # We only want to keep those pairs with missing values
-    missing_df = compute_missing(df[num_pairs + cat_pairs])
+    missing_df = compute_missing(df[num_vars + cat_vars])
     final_pairs = final_pairs.merge(missing_df, left_on='var1', right_on='var_name').rename(
         columns={'pct_missing': 'pct_missing_var1'}).drop(columns='var_name')
     final_pairs = final_pairs.merge(missing_df, left_on='var2', right_on='var_name').rename(
@@ -108,11 +110,11 @@ def impute_missing_values_with_highly_related_pairs(df, num_vars, cat_vars, impu
             print(f"Imputing with empirical discrete distribution {row['var2']} -> {row['var1']}")
             # Bucket the numerical variable to treat both as categorical.
             if row['var2'] in num_vars:
-                print(f"Bucket variable {row['var2']}")
+                # print(f"Bucket variable {row['var2']}")
                 df[f"b_{row['var2']}"] = bucket(df[row['var2']])
                 df[f"b_{row['var1']}"] = df[row['var1']]
             elif row['var1'] in num_vars:
-                print(f"Bucket variable {row['var1']}")
+                # print(f"Bucket variable {row['var1']}")
                 df[f"b_{row['var1']}"] = bucket(df[row['var1']])
                 df[f"b_{row['var2']}"] = df[row['var2']]
             else:
@@ -128,14 +130,15 @@ def impute_missing_values_with_highly_related_pairs(df, num_vars, cat_vars, impu
                 dist_freq = df.loc[
                     (df[f"b_{row['var2']}"] == pv) & (~df[row['var1']].isnull()), row['var1']].value_counts(
                     normalize=True).sort_index()
-                xk = tuple(dist_freq.index)
-                pk = tuple(dist_freq)
-                disc_dist = rv_discrete(name='imputation', values=(xk, pk))
-                # Impute missing values for the dependent variable using a random value extracted from the empirical
-                # discrete distribution computed above
-                no_missing = df[(df[f"b_{row['var2']}"] == pv) & (df[row['var1']].isnull())].shape[0]
-                df.loc[(df[f"b_{row['var2']}"] == pv) & (df[row['var1']].isnull()), row['var1']] = disc_dist.ppf(
-                    np.random.rand(no_missing))
+                if dist_freq.shape[0] > 0:
+                    xk = tuple(dist_freq.index)
+                    pk = tuple(dist_freq)
+                    disc_dist = rv_discrete(name='imputation', values=(xk, pk))
+                    # Impute missing values for the dependent variable using a random value extracted from the empirical
+                    # discrete distribution computed above
+                    no_missing = df[(df[f"b_{row['var2']}"] == pv) & (df[row['var1']].isnull())].shape[0]
+                    df.loc[(df[f"b_{row['var2']}"] == pv) & (df[row['var1']].isnull()), row['var1']] = disc_dist.ppf(
+                        np.random.rand(no_missing))
 
             df = df.drop(columns=[f"b_{row['var1']}", f"b_{row['var2']}"])
 
