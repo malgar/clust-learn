@@ -3,6 +3,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import pingouin as pg
 
 from matplotlib.ticker import MaxNLocator
 
