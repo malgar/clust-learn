@@ -1,9 +1,11 @@
 # Utils for daya processing
 
+import networkx as nx
 import numpy as np
 import pandas as pd
 
 from scipy.stats import rv_discrete
+from sklearn.feature_selection import mutual_info_regression, mutual_info_classif
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mutual_info_score
 from ..utils import cross_corr_ratio
@@ -143,3 +145,72 @@ def impute_missing_values_with_highly_related_pairs(df, num_vars, cat_vars, impu
             df = df.drop(columns=[f"b_{row['var1']}", f"b_{row['var2']}"])
 
     return df
+
+
+def mutual_information_pair_scores(df, num_vars, cat_vars):
+    # First, we calculate max mutual information per variable for normalization
+    max_mi_scores = dict()
+    for nv in num_vars:
+        values = df[nv].dropna().values
+        mi = mutual_info_regression(values.reshape(-1, 1), values, discrete_features=False)[0]
+        max_mi_scores[nv] = mi
+    for cv in cat_vars:
+        values = df[cv].dropna().values
+        mi = mutual_info_score(values, values)
+        max_mi_scores[cv] = mi
+
+    # Secondly, we compute the mutual information of every pair of variables and normalize it by the max mutual
+    # information calculated above
+    mi_scores = list()
+    # Numerical pairs
+    for i in range(len(num_vars) - 1):
+        for j in range(i + 1, len(num_vars)):
+            df_f = df[[num_vars[i], num_vars[j]]].dropna()
+            mi = max(mutual_info_regression(df_f[num_vars[i]].values.reshape(-1, 1), df_f[num_vars[j]],
+                                            discrete_features=False)[0],
+                     mutual_info_regression(df_f[num_vars[j]].values.reshape(-1, 1), df_f[num_vars[i]],
+                                            discrete_features=False)[0])
+            norm_factor = max(max_mi_scores[num_vars[i]], max_mi_scores[num_vars[j]])
+            mi = mi / norm_factor
+            mi_scores.append((num_vars[i], num_vars[j], mi))
+
+    # Mixed pairs
+    for i in range(len(num_vars)):
+        for j in range(len(cat_vars)):
+            df_f = df[[num_vars[i], cat_vars[j]]].dropna()
+            mi = max(mutual_info_classif(df_f[num_vars[i]].values.reshape(-1, 1), df_f[cat_vars[j]],
+                                         discrete_features=False)[0],
+                     mutual_info_regression(df_f[cat_vars[j]].values.reshape(-1, 1), df_f[num_vars[i]],
+                                            discrete_features=True)[0])
+            norm_factor = max(max_mi_scores[num_vars[i]], max_mi_scores[cat_vars[j]])
+            mi = mi / norm_factor
+            mi_scores.append((num_vars[i], cat_vars[j], mi))
+
+    # Categorical pairs
+    for i in range(len(cat_vars) - 1):
+        for j in range(i + 1, len(cat_vars)):
+            df_f = df[[cat_vars[i], cat_vars[j]]].dropna()
+            mi = mutual_info_score(df_f[cat_vars[i]], df_f[cat_vars[j]])
+            norm_factor = max(max_mi_scores[cat_vars[i]], max_mi_scores[cat_vars[j]])
+            mi = mi / norm_factor
+            mi_scores.append((cat_vars[i], cat_vars[j], mi))
+
+    mi_scores_df = pd.DataFrame(mi_scores, columns=['var1', 'var2', 'score'])
+    return mi_scores_df
+
+
+# TODO: It shouldn't be compulsory to have both types of variables. (This applies to all the modules)
+def variable_graph_partitioning(pair_scores, thres=0.5):
+    edges = pair_scores[pair_scores['score'] > thres].apply(lambda row: (row['var1'], row['var2']), axis=1).tolist()
+
+    connected_nodes = list(zip(*edges))
+    connected_nodes = list(connected_nodes[0]) + list(connected_nodes[1])
+    nodes = list(np.unique(connected_nodes))
+
+    G = nx.Graph()
+    G.add_nodes_from(nodes)
+    G.add_edges_from(edges)
+    g_list = [c for c in sorted(nx.connected_components(G), key=len, reverse=True)]
+    # Nodes, edges, connected components
+    all_nodes = list(np.unique(pair_scores['var1'].to_list() + pair_scores['var2'].to_list()))
+    return all_nodes, edges, g_list
