@@ -201,6 +201,7 @@ def imputation_pairs(df, num_vars=None, cat_vars=None, num_kws=None, mixed_kws=N
     final_pairs = final_pairs[final_pairs['missing_var1'] > final_pairs['missing_var2']].reset_index(drop=True)
     return final_pairs
 
+
 def _bucketize(values, q=10):
     """
     Quantile bucketizer.
@@ -447,7 +448,7 @@ def _hot_deck_weights(distances):
     return weights
 
 
-def hot_deck_imputation(df, k=8, partitions=None):
+def hot_deck_imputation(df, variables, k=8, partitions=None):
     """
     Computes KNN hot deck imputation using sklearn KNNImputer
     (see https://scikit-learn.org/stable/modules/generated/sklearn.impute.KNNImputer.html).
@@ -471,12 +472,12 @@ def hot_deck_imputation(df, k=8, partitions=None):
     apply_threshold = True
     if partitions is None:
         apply_threshold = False
-        partitions = [set(list(df.columns))]
+        partitions = [set(variables)]
 
     df = df.sample(frac=1, random_state=42)
 
     mms = MinMaxScaler()
-    df = pd.DataFrame(mms.fit_transform(df), columns=df.columns)
+    df[variables] = mms.fit_transform(df[variables])
 
     for p in partitions:
         p = list(p)
@@ -489,4 +490,6 @@ def hot_deck_imputation(df, k=8, partitions=None):
         df.loc[df_p_i.index, df_p_i.columns] = df_p_i.values
         print('Remaining missing values', df.isnull().sum().sum())
 
+    df[variables] = mms.inverse_transform(df[variables])
     return df
+
