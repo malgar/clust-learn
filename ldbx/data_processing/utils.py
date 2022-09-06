@@ -5,14 +5,13 @@ import numpy as np
 import pandas as pd
 
 from scipy.stats import rv_discrete
+from sklearn.ensemble import IsolationForest
 from sklearn.feature_selection import mutual_info_regression, mutual_info_classif
 from sklearn.impute import KNNImputer
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mutual_info_score
 from sklearn.preprocessing import MinMaxScaler
 from ..utils import cross_corr_ratio
-
-# TODO: Deletion of variables with a pct of missing values above a given threshold
 
 
 def compute_missing(df, normalize=True):
@@ -457,11 +456,14 @@ def hot_deck_imputation(df, variables, k=8, partitions=None):
     ----------
     df : `pandas.DataFrame`
         DataFrame containing the data.
+    variables : list
+        List of variables with potential missing values.
+        **Note** all partitions must be contained in this variable list.
     k : int, default=8
         Number of neighbors.
     partitions : `numpy.ndarray`, list of lists
         Variable partitions/clusters to impute variables by cluster.
-        **Note** if partitions are passed, imputation is only performed on those observations with fewer than 1/4 of
+        **Note** if any partition is passed, imputation is only performed on those observations with fewer than 1/4 of
         their values within the partition variables missed.
 
     Returns
@@ -493,3 +495,30 @@ def hot_deck_imputation(df, variables, k=8, partitions=None):
     df[variables] = mms.inverse_transform(df[variables])
     return df
 
+
+def remove_outliers(df, variables, iforest_kws=None):
+    """
+    Removes outliers using the Isolation Forest algorithm
+    (https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.IsolationForest.html).
+
+    Parameters
+    ----------
+    df : `pandas.DataFrame`
+        DataFrame containing the data.
+    variables : list
+        Variables with potential outliers.
+    iforest_kws : dict, default=None
+        IsolationForest algorithm hyperparameters.
+
+    Returns
+    ----------
+    df_inliers : `pandas.DataFrame`
+        DataFrame with inliers (i.e. observations that are not outliers).
+    df_outliers : `pandas.DataFrame`
+        DataFrame with outliers.
+    """
+    if iforest_kws is None:
+        iforest_kws = dict(max_samples=0.8, max_features=0.8, bootstrap=False)
+    outlier_if = IsolationForest(**iforest_kws)
+    outlier_flag = outlier_if.fit_predict(df[variables])
+    return df[outlier_flag > 0], df[outlier_flag < 0]
