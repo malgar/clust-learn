@@ -8,6 +8,25 @@ import seaborn as sns
 from ..utils import savefig
 
 
+def missing_values_heatmap(df, output_path=None, savefig_kws=None):
+    """
+    Plots a heatmap to visualize missing values (light color).
+
+    Parameters
+    ----------
+    df : `pandas.DataFrame`
+       DataFrame containing the data.
+    output_path : str, default=None
+       Path to save figure as image.
+    savefig_kws : dict, default=None
+       Save figure options.
+    """
+    fig, ax = plt.subplots(figsize=(18, 10))
+    sns.heatmap(df.isnull().astype(int), cbar=False)
+    fig.tight_layout()
+    savefig(output_path=output_path, savefig_kws=savefig_kws)
+
+
 def plot_imputation_pairs_scatter(df, imputation_pairs, sample_frac=1.0, scatter_kws=None, line_kws=None,
                                   output_path=None, savefig_kws=None):
     """

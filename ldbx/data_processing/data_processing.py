@@ -225,7 +225,7 @@ def _bucketize(values, q=10):
     return b_values
 
 
-def impute_missing_values_with_highly_related_pairs(df, imputation_pairs, num_vars=None, cat_vars=None):
+def impute_missing_values_with_highly_related_pairs(df_original, imputation_pairs, num_vars=None, cat_vars=None):
     """
     One-to-one model based imputation for the imputation pairs identified.
     * If both variables are numerical, linear regression is used. The regressor is trained using all observations with
@@ -238,7 +238,7 @@ def impute_missing_values_with_highly_related_pairs(df, imputation_pairs, num_va
 
     Parameters
     ----------
-    df : `pandas.DataFrame`
+    df_original : `pandas.DataFrame`
         DataFrame containing the data.
     imputation_pairs : `pandas.DataFrame`
         Imputation pairs as returned by the function `imputation_pairs()`.
@@ -257,6 +257,7 @@ def impute_missing_values_with_highly_related_pairs(df, imputation_pairs, num_va
 
     num_vars = num_vars if num_vars else []
     cat_vars = cat_vars if cat_vars else []
+    df = df_original.copy()
 
     for idx, row in imputation_pairs.iterrows():
         if row['var1'] in num_vars and row['var2'] in num_vars:
@@ -336,7 +337,7 @@ def mutual_information_pair_scores(df, num_vars=None, cat_vars=None):
     max_mi_scores = dict()
     for nv in num_vars:
         values = df[nv].dropna().values
-        mi = mutual_info_regression(values.reshape(-1, 1), values, discrete_features=False)[0]
+        mi = mutual_info_regression(values.reshape(-1, 1), values, discrete_features=False, random_state=42)[0]
         max_mi_scores[nv] = mi
     for cv in cat_vars:
         values = df[cv].dropna().values
@@ -351,9 +352,9 @@ def mutual_information_pair_scores(df, num_vars=None, cat_vars=None):
         for j in range(i + 1, len(num_vars)):
             df_f = df[[num_vars[i], num_vars[j]]].dropna()
             mi = max(mutual_info_regression(df_f[num_vars[i]].values.reshape(-1, 1), df_f[num_vars[j]],
-                                            discrete_features=False)[0],
+                                            discrete_features=False, random_state=42)[0],
                      mutual_info_regression(df_f[num_vars[j]].values.reshape(-1, 1), df_f[num_vars[i]],
-                                            discrete_features=False)[0])
+                                            discrete_features=False, random_state=42)[0])
             norm_factor = max(max_mi_scores[num_vars[i]], max_mi_scores[num_vars[j]])
             mi = mi / norm_factor
             mi_scores.append((num_vars[i], num_vars[j], mi))
@@ -363,9 +364,9 @@ def mutual_information_pair_scores(df, num_vars=None, cat_vars=None):
         for j in range(len(cat_vars)):
             df_f = df[[num_vars[i], cat_vars[j]]].dropna()
             mi = max(mutual_info_classif(df_f[num_vars[i]].values.reshape(-1, 1), df_f[cat_vars[j]],
-                                         discrete_features=False)[0],
+                                         discrete_features=False, random_state=42)[0],
                      mutual_info_regression(df_f[cat_vars[j]].values.reshape(-1, 1), df_f[num_vars[i]],
-                                            discrete_features=True)[0])
+                                            discrete_features=True, random_state=42)[0])
             norm_factor = max(max_mi_scores[num_vars[i]], max_mi_scores[cat_vars[j]])
             mi = mi / norm_factor
             mi_scores.append((num_vars[i], cat_vars[j], mi))
@@ -383,7 +384,7 @@ def mutual_information_pair_scores(df, num_vars=None, cat_vars=None):
     return mi_scores_df
 
 
-def variable_graph_partitioning(pair_scores, thres=0.5):
+def variable_graph_partitioning(pair_scores, thres=0.05):
     """
     Computes a graph partitioning of the graph G=(V, E), where V = {variables} and E = {pairs of variables with a mutual
     information score above the threshold}. The connected components represent clusters of related variables.
@@ -392,7 +393,7 @@ def variable_graph_partitioning(pair_scores, thres=0.5):
     ----------
     pair_scores : `pandas.DataFrame`
         DataFrame with mutual information score for every pair of variables.
-    thres : float, default=0.5
+    thres : float, default=0.05
         Threshold to determine if two variables are similar based on mutual information score.
 
     Returns
@@ -449,14 +450,14 @@ def _hot_deck_weights(distances):
     return weights
 
 
-def hot_deck_imputation(df, variables, k=8, partitions=None):
+def hot_deck_imputation(df_original, variables, k=8, partitions=None):
     """
     Computes KNN hot deck imputation using sklearn KNNImputer
     (see https://scikit-learn.org/stable/modules/generated/sklearn.impute.KNNImputer.html).
 
     Parameters
     ----------
-    df : `pandas.DataFrame`
+    df_original : `pandas.DataFrame`
         DataFrame containing the data.
     variables : list
         List of variables with potential missing values.
@@ -478,7 +479,8 @@ def hot_deck_imputation(df, variables, k=8, partitions=None):
         apply_threshold = False
         partitions = [set(variables)]
 
-    df = df.sample(frac=1, random_state=42)
+    original_index = df_original.index
+    df = df_original.sample(frac=1, random_state=42)
 
     mms = MinMaxScaler()
     df[variables] = mms.fit_transform(df[variables])
@@ -495,11 +497,12 @@ def hot_deck_imputation(df, variables, k=8, partitions=None):
         print('Remaining missing values', df.isnull().sum().sum())
 
     df[variables] = mms.inverse_transform(df[variables])
+    df = df.loc[original_index]
     return df
 
 
 def impute_missing_values(df, num_vars, cat_vars, num_pair_kws=None, mixed_pair_kws=None, cat_pair_kws=None,
-                          graph_thres=0.5, k=8, max_missing_thres=1/3):
+                          graph_thres=0.05, k=8, max_missing_thres=0.33):
     """
     Main function for data imputation. The procedure consists of four different steps:
      1. One-to-one model based imputation for strongly related variables (see
@@ -521,7 +524,7 @@ def impute_missing_values(df, num_vars, cat_vars, num_pair_kws=None, mixed_pair_
         Categorical variable name(s).
     {num,mixed,cat}_pair_kws : dict, default=None
         Additional keyword arguments to pass to compute imputation_pairs.
-    graph_thres : float, default=0.5
+    graph_thres : float, default=0.05
         Threshold to determine if two variables are similar based on mutual information score, and therefore should be
         considered as edges of the graph from which variable clusters are derived.
     k : int, default=8
@@ -535,20 +538,24 @@ def impute_missing_values(df, num_vars, cat_vars, num_pair_kws=None, mixed_pair_
         DataFrame with all missing values imputed.
     """
     # One-to-one model based imputation for strongly related variables
+    print('--- One-to-one model based imputation for strongly related variables ---')
     ip = imputation_pairs(df, num_vars, cat_vars, num_kws=num_pair_kws, mixed_kws=mixed_pair_kws, cat_kws=cat_pair_kws)
     df = impute_missing_values_with_highly_related_pairs(df, ip, num_vars, cat_vars)
 
     # Cluster based hot deck imputation
     # Applied only to clusters with at least 4 variables
+    print('--- Cluster based hot deck imputation ---')
     mi_scores = mutual_information_pair_scores(df, num_vars, cat_vars)
     nodes, edges, comp = variable_graph_partitioning(mi_scores, thres=graph_thres)
     df = hot_deck_imputation(df, num_vars + cat_vars, k=k,
                              partitions=list(np.array(comp)[np.array(list(map(len, comp))) >= 4]))
 
     # Remove records with more than max_missing_thres missing values are removed.
+    print(f'--- Removing records with more than {max_missing_thres*100} missing values ---')
     df = df[df.isnull().sum(1) < df.shape[1] * max_missing_thres]
 
     # Hot deck imputation for the remaining missing values
+    print('--- Hot deck imputation for the remaining missing values ---')
     df = hot_deck_imputation(df, num_vars + cat_vars, k=k)
     return df
 
