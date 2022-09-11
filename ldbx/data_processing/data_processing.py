@@ -12,8 +12,7 @@ from sklearn.impute import KNNImputer
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mutual_info_score
 from sklearn.preprocessing import MinMaxScaler
-# from ..utils import cross_corr_ratio
-from utils_ import cross_corr_ratio
+from ..utils import cross_corr_ratio
 
 
 def compute_missing(df, normalize=True):
@@ -486,8 +485,8 @@ def hot_deck_imputation(df_original, variables, k=8, partitions=None):
     df[variables] = mms.fit_transform(df[variables])
 
     for p in partitions:
-        p = list(p)
-        print(p)
+        p = sorted(p)
+        print('Partition:', p)
         imputer = KNNImputer(n_neighbors=k, weights=_hot_deck_weights)
         df_p = df
         if apply_threshold:
@@ -582,7 +581,7 @@ def remove_outliers(df, variables, iforest_kws=None):
         DataFrame with outliers.
     """
     if iforest_kws is None:
-        iforest_kws = dict(max_samples=0.8, max_features=0.8, bootstrap=False)
+        iforest_kws = dict(max_samples=0.8, max_features=0.8, bootstrap=False, random_state=42)
     outlier_if = IsolationForest(**iforest_kws)
     outlier_flag = outlier_if.fit_predict(df[variables])
     return df[outlier_flag > 0], df[outlier_flag < 0]
