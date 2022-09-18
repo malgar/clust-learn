@@ -17,15 +17,15 @@ class DimensionalityReduction(base.BaseEstimator, base.TransformerMixin):
     Parameters
     ----------
     df : `pandas.DataFrame`
-            DataFrame containing the data.
+        DataFrame containing the data.
     num_vars : string, list, series, or vector array
-            Numerical variable name(s).
+        Numerical variable name(s).
     cat_vars : string, list, series, or vector array
-            Categorical variable name(s).
-    num_algorithm : str, default='pca'
+        Categorical variable name(s).
+    num_algorithm : string, default='pca'
         Technique to be used for dimensionality reduction for numerical variables.
         By default, PCA (Principal Component Analysis) is used.
-    cat_algorithm : str, default='mca'
+    cat_algorithm : string, default='mca'
         Technique to be used for dimensionality reduction for categorical variables.
         By default, MCA (Multiple Correspondence Analysis) is used.
     num_kwargs : dictionary, default=None
@@ -129,6 +129,7 @@ class DimensionalityReduction(base.BaseEstimator, base.TransformerMixin):
         self.num_trans_.columns = self.num_components_
         self.cat_components_ = list(trans.columns)[-self.cat_trans_.shape[1]:]
         self.cat_trans_.columns = self.cat_components_
+        self.n_components = len(self.num_components_) + len(self.cat_components_)
         return trans
 
     def _transform_num(self, df, n_components_num=None):

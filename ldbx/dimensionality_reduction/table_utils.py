@@ -2,7 +2,8 @@
 
 import numpy as np
 import pandas as pd
-import pingouin as pg
+
+from ..utils import cross_corr_ratio
 
 
 def cross_corr(df1, df2):
@@ -22,33 +23,6 @@ def cross_corr(df1, df2):
     corr_coeffs = []
     for col in df1.columns:
         corr_coeffs.append(df2.corrwith(df1[col]).tolist())
-
-    corr_df = pd.DataFrame(corr_coeffs, index=df1.columns, columns=df2.columns).transpose()
-    return corr_df
-
-
-def cross_corr_ratio(df1, df2):
-    """
-    Calculates the correlation ratio of every column in df1 with every column in df2
-    https://en.wikipedia.org/wiki/Correlation_ratio
-
-    Parameters
-    ----------
-    df1 : `pandas.DataFrame`
-    df2 : `pandas.DataFrame`
-
-    Returns
-    ----------
-    corr_df: `pandas.DataFrame`
-        DataFrame with the correlation ratio of every pair of columns from df1 and df2.
-    """
-    corr_coeffs = []
-    df_aux = pd.concat([df1, df2], axis=1)
-    for col in df1.columns:
-        col_corr_coeffs = []
-        for dv in df2.columns:
-            col_corr_coeffs.append(pg.anova(data=df_aux, dv=dv, between=col)['np2'].iloc[0])
-        corr_coeffs.append(col_corr_coeffs)
 
     corr_df = pd.DataFrame(corr_coeffs, index=df1.columns, columns=df2.columns).transpose()
     return corr_df

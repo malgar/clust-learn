@@ -289,3 +289,39 @@ def plot_cumulative_explained_var_comparison(explained_variance_ratio1, explaine
     ax.legend(fontsize=12, labelspacing=0.5)
     fig.tight_layout(w_pad=2)
     savefig(output_path=output_path, savefig_kws=savefig_kws)
+
+
+def plot_compare_pca_based_components(components_pca, components_other, original_vars, other_name='Sparse PCA', n_pc=1,
+                                      output_path=None, savefig_kws=None):
+    """
+    Plots comparison of cumulative explained variance between two techniques.
+
+    Parameters
+    ----------
+    components_pca : `numpy.array`
+        Components of the `n_pc` principal component calculated with PCA.
+    components_other : `numpy.array`
+        Components of the `n_pc` principal component calculated a PCA based technique.
+    original_vars : list
+        List of names of the original variables.
+    other_name : str, default='Sparse PCA'
+        Name of the other applied technique.
+    n_pc : int, default=1
+        Principal component to which the components refer to.
+    output_path : str, default=None
+        Path to save figure as image.
+    savefig_kws : dict, default=None
+        Save figure options.
+    """
+    plt.figure(figsize=(16, 5))
+    plt.bar(x=range(len(components_pca)), height=components_pca, label='PCA', color='#11A579', alpha=0.5)
+    plt.plot(range(len(components_other)), components_other, 'o', label=other_name, color='#CF1C90', alpha=0.67)
+
+    plt.hlines(0, 0, len(components_other), color='black', linewidth=0.5)
+    plt.ylabel('Coefficients', fontsize=12)
+    plt.xticks(ticks=range(len(original_vars)), labels=original_vars, rotation=90, fontsize=11)
+    plt.legend(fontsize=12, title='Method', title_fontsize=13, labelspacing=0.5)
+    plt.xlim(-1, len(original_vars))
+    plt.title(f'Principal Component {str(n_pc).zfill(2)}', fontsize=14)
+    plt.tight_layout()
+    savefig(output_path=output_path, savefig_kws=savefig_kws)
