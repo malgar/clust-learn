@@ -7,16 +7,17 @@ import statsmodels.api as sm
 from scipy.stats import chi2_contingency
 from sklearn import base
 from sklearn.cluster import AgglomerativeClustering, KMeans
-from sklearn.metrics import davies_bouldin_score, silhouette_score
+from sklearn.metrics import calinski_harabasz_score, davies_bouldin_score, silhouette_score
 from sklearn.preprocessing import MinMaxScaler
 from statsmodels.formula.api import ols
 from table_utils import *
 from utils import *
 from viz_utils import *
 
-__metrics__ = ['inertia', 'davies_bouldin_score', 'silhouette_score']
+__metrics__ = ['inertia', 'davies_bouldin_score', 'silhouette_score', 'calinski_harabasz_score']
 METRIC_NAMES = dict(zip(__metrics__,
-                        ['Weighted Sum of Squared Distances', 'Davies Bouldin Score', 'Silhouette Score']))
+                        ['Weighted Sum of Squared Distances', 'Davies Bouldin Score', 'Silhouette Score',
+                         'Calinski and Harabasz score']))
 KMEANS = ['kmeans', 'kmeans++']
 HIERARCHICAL_WARD = ['ward', 'hierarchical', 'agglomerative']
 
@@ -32,14 +33,21 @@ class Clustering(base.BaseEstimator, base.TransformerMixin):
     algorithms : str or list, default='kmeans'
         Algorithm/s to be used for clustering.
         By default, [K-Means++](https://scikit-learn.org/stable/modules/clustering.html#k-means)
+    normalize : bool, default=True
+        Whether to apply data normalization for fair comparisons between variables. By default it is applied. In case
+        dimensionality reduction is applied beforehand, normalization should not be applied.
     """
     def __init__(self,
                  df,
-                 algorithms='kmeans'):
+                 algorithms='kmeans',
+                 normalize=True):
 
         # Normalize variables for fair comparisons
-        mms = MinMaxScaler()
-        self.df = pd.DataFrame(mms.fit_transform(df), columns=df.columns)
+        self.normalize = normalize
+        self.df = df.copy()
+        if normalize:
+            mms = MinMaxScaler()
+            self.df = pd.DataFrame(mms.fit_transform(df), columns=df.columns)
 
         self.dimensions = list(df.columns)
 
@@ -90,7 +98,13 @@ class Clustering(base.BaseEstimator, base.TransformerMixin):
                                                                self.instances_[algorithm].labels_))
                 elif metric == 'silhouette_score':
                     self.scores_[algorithm].append(
-                        0 if nc == 1 else silhouette_score(self.df[self.dimensions], self.instances_[algorithm].labels_))
+                        0 if nc == 1 else silhouette_score(self.df[self.dimensions],
+                                                           self.instances_[algorithm].labels_))
+
+                elif metric == 'calinski_harabasz_score':
+                    self.scores_[algorithm].append(
+                        1 if nc == 1 else calinski_harabasz_score(self.df[self.dimensions],
+                                                                  self.instances_[algorithm].labels_))
 
             if len(range(*cluster_range)) > 1:
                 kl = KneeLocator(x=range(*cluster_range), y=self.scores_[algorithm], curve='convex',
@@ -121,7 +135,8 @@ class Clustering(base.BaseEstimator, base.TransformerMixin):
         metric : str, default='inertia'
             Metric to use in order to compare different algorithms and, if applicable,to calculate the optimal number
             of clusters.
-            By default, inertia is used. Supported metrics: ['inertia', 'davies_bouldin_score', 'silhouette_score']
+            By default, inertia is used. Supported metrics: ['inertia', 'davies_bouldin_score', 'silhouette_score',
+            'calinski_harabasz_score']
         max_clusters : int, default=10
             In case of optimal search, this parameter limits the maximum number of clusters allowed.
         prefix : str, default=None
@@ -156,11 +171,12 @@ class Clustering(base.BaseEstimator, base.TransformerMixin):
 
         self._compute_clusters(self.optimal_config_[0], self.optimal_config_[1])
 
-        # TODO: Might be interesting to only keep one
+        # Might be interesting to only keep one
         self.df['cluster'] = self.labels_
         self.df['cluster_cat'] = self.labels_
         if prefix is not None:
-            self.df['cluster_cat'] = list(map(lambda x: f'{prefix}_{x}', self.labels_))
+            name_len = len(str(max(self.labels_)))
+            self.df['cluster_cat'] = list(map(lambda x: f'{prefix}_{str.zfill(str(x), name_len)}', self.labels_))
 
         return self.labels_
 
@@ -193,6 +209,7 @@ class Clustering(base.BaseEstimator, base.TransformerMixin):
             DataFrame with the cluster description.
         """
         if df_ext is not None:
+            df_ext = df_ext.copy()
             df_ext['cluster'] = self.labels_
         else:
             df_ext = self.df[self.dimensions + ['cluster']]
@@ -257,13 +274,16 @@ class Clustering(base.BaseEstimator, base.TransformerMixin):
 
         return freq
 
-    def compare_cluster_means_to_global_means(self, output_path=None):
+    def compare_cluster_means_to_global_means(self, df_original=None, output_path=None):
         """
         For every cluster and every internal variable, the relative difference between the intra-cluster mean
         and the global mean.
 
         Parameters
         ----------
+        df_original : `pandas.DataFrame`, default=None
+            In case the comparison wants to be made with the original variables and values. Note it is assumed that both
+            the original dataframe and the one used for clustering have observations is the same order.
         output_path : str, default=None
             If an output_path is passed, the resulting DataFame is saved as a CSV file.
 
@@ -272,7 +292,14 @@ class Clustering(base.BaseEstimator, base.TransformerMixin):
         df_agg_diff : `pandas.DataFrame`
             DataFrame with the comparison.
         """
-        return compare_cluster_means_to_global_means(self.df, self.dimensions, output_path=None)
+        if df_original is not None:
+            var_names = list(df_original.columns)
+            df_original = df_original.copy()
+            df_original['cluster'] = self.labels_
+            return compare_cluster_means_to_global_means(df_original, var_names, output_path=None)
+        else:
+            return compare_cluster_means_to_global_means(self.df, self.dimensions, data_standardized=not self.normalize,
+                                                         output_path=None)
 
     def anova_tests(self, df_test=None, vars_test=None, cluster_filter=None, output_path=None):
         """
@@ -299,6 +326,7 @@ class Clustering(base.BaseEstimator, base.TransformerMixin):
             DataFrame with the corresponding test statistics.
         """
         if df_test is not None:
+            df_test = df_test.copy()
             df_test['cluster'] = self.labels_
         else:
             df_test = self.df[self.dimensions + ['cluster']]
@@ -402,7 +430,7 @@ class Clustering(base.BaseEstimator, base.TransformerMixin):
         """
         plot_clustercount(self.df, output_path, savefig_kws)
 
-    def plot_cluster_means_to_global_means_comparison(self, xlabel=None, ylabel=None,
+    def plot_cluster_means_to_global_means_comparison(self, df_original=None, xlabel=None, ylabel=None,
                                                       levels=[-0.50, -0.32, -0.17, -0.05, 0.05, 0.17, 0.32, 0.50],
                                                       output_path=None, savefig_kws=None):
         """
@@ -410,6 +438,9 @@ class Clustering(base.BaseEstimator, base.TransformerMixin):
 
         Parameters
         ----------
+        df_original : `pandas.DataFrame`, default=None
+            In case the comparison wants to be made with the original variables and values. Note it is assumed that both
+            the original dataframe and the one used for clustering have observations is the same order.
         xlabel : str, default=None
             x-label name/description.
         ylabel : str, default=None
@@ -422,8 +453,19 @@ class Clustering(base.BaseEstimator, base.TransformerMixin):
         savefig_kws : dict, default=None
             Save figure options.
         """
-        plot_cluster_means_to_global_means_comparison(self.df, self.dimensions, xlabel, ylabel, levels, output_path,
-                                                      savefig_kws)
+
+        if df_original is not None:
+            var_names = list(df_original.columns)
+            df_original = df_original.copy()
+            df_original['cluster'] = self.labels_
+
+            plot_cluster_means_to_global_means_comparison(df_original, var_names, xlabel, ylabel, levels,
+                                                          data_standardized=False, output_path=output_path,
+                                                          savefig_kws=savefig_kws)
+        else:
+            plot_cluster_means_to_global_means_comparison(self.df, self.dimensions, xlabel, ylabel, levels,
+                                                          data_standardized=not self.normalize, output_path=output_path,
+                                                          savefig_kws=savefig_kws)
 
     def plot_distribution_comparison_by_cluster(self, df_ext=None, xlabel=None, ylabel=None, output_path=None,
                                                 savefig_kws=None):
@@ -445,9 +487,15 @@ class Clustering(base.BaseEstimator, base.TransformerMixin):
         savefig_kws : dict, default=None
             Save figure options.
         """
+        sharey = self.normalize
         if df_ext is None:
             df_ext = self.df[self.dimensions]
-        plot_distribution_comparison_by_cluster(df_ext, self.labels_, xlabel, ylabel, output_path, savefig_kws)
+        else:
+            sharey = False
+
+        plot_distribution_comparison_by_cluster(df_ext, self.labels_, xlabel=xlabel, ylabel=ylabel,
+                                                sharey=sharey, output_path=output_path,
+                                                savefig_kws=savefig_kws)
 
     def plot_clusters_2D(self, coor1, coor2, style_kwargs=dict(), output_path=None, savefig_kws=None):
         """

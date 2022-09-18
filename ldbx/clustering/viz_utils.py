@@ -98,7 +98,7 @@ def plot_clustercount(df, output_path=None, savefig_kws=None):
 
 def plot_cluster_means_to_global_means_comparison(df, dimensions, xlabel=None, ylabel=None,
                                                   levels=[-0.50, -0.32, -0.17, -0.05, 0.05, 0.17, 0.32, 0.50],
-                                                  output_path=None, savefig_kws=None):
+                                                  data_standardized=False, output_path=None, savefig_kws=None):
     """
     Plots the normalized curve used for computing the optimal number of clusters.
 
@@ -116,15 +116,19 @@ def plot_cluster_means_to_global_means_comparison(df, dimensions, xlabel=None, y
     levels : list or `numpy.array`
         Values to be used as cuts for color intensity.
         Default values: [-0.50, -0.32, -0.17, -0.05, 0.05, 0.17, 0.32, 0.50]
+    data_standardized : bool, default=False
+        If data are standardized, comparison to global mean is based solely on the mean per cluster.
     output_path : str, default=None
         Path to save figure as image.
     savefig_kws : dict, default=None
         Save figure options.
     """
-    df_diff = compare_cluster_means_to_global_means(df, dimensions)
+    df_diff = compare_cluster_means_to_global_means(df, dimensions, data_standardized=data_standardized)
     colors = sns.color_palette("BrBG", n_colors=9)
     cmap, norm = matplotlib.colors.from_levels_and_colors(levels, colors, extend="both")
-    fig, ax = plt.subplots(figsize=(20, 8))
+    width = min(len(dimensions), 20)
+    height = min(df['cluster'].nunique(), 8)
+    fig, ax = plt.subplots(figsize=(width, height))
     im = ax.imshow(df_diff[dimensions].values, cmap=cmap, norm=norm)
     ax.set(xticks=range(len(dimensions)), yticks=range(df_diff.shape[0]),
            xticklabels=list(map(str.upper, dimensions)), yticklabels=df_diff['cluster'])
@@ -150,8 +154,8 @@ def plot_cluster_means_to_global_means_comparison(df, dimensions, xlabel=None, y
     savefig(output_path=output_path, savefig_kws=savefig_kws)
 
 
-def plot_distribution_comparison_by_cluster(df, cluster_labels, xlabel=None, ylabel=None, output_path=None,
-                                            savefig_kws=None):
+def plot_distribution_comparison_by_cluster(df, cluster_labels, xlabel=None, ylabel=None, sharex=True, sharey=True,
+                                            output_path=None, savefig_kws=None):
     """
     Plots the violin plots per cluster and *continuous* variables of interest to understand differences in their
     distributions by cluster.
@@ -167,6 +171,10 @@ def plot_distribution_comparison_by_cluster(df, cluster_labels, xlabel=None, yla
         x-label name/description.
     ylabel : str, default=None
         y-label name/description.
+    sharex : bool, default=True
+        If True, all subplots share the x-axis.
+    sharey : bool, default=True
+        If True, all subplots share the y-axis.
     output_path : str, default=None
         Path to save figure as image.
     savefig_kws : dict, default=None
@@ -182,7 +190,7 @@ def plot_distribution_comparison_by_cluster(df, cluster_labels, xlabel=None, yla
             ncols=2
 
     nrows = nvars // ncols + (nvars % ncols > 0)
-    fig, axs = plt.subplots(nrows, ncols, figsize=(max(nclusters * ncols, 9), 5 * nrows), sharex=True, sharey=True)
+    fig, axs = plt.subplots(nrows, ncols, figsize=(max(nclusters * ncols, 9), 5 * nrows), sharex=sharex, sharey=sharey)
 
     i = 0
     for col in df.columns:
@@ -252,17 +260,23 @@ def plot_clusters_2D(x, y, hue, df, style_kwargs=dict(), output_path=None, savef
 
     fig, axs = plt.subplots(1, 2, figsize=(14, 5), sharey=True, sharex=True)
 
+    x_range = df[x].max() - df[x].min()
+    xmin = df[x].min() - x_range * 0.05
+    xmax = df[x].max() + x_range * 0.05
+    y_range = df[y].max() - df[y].min()
+    ymin = df[y].min() - y_range * 0.05
+    ymax = df[y].max() + y_range * 0.05
+
     # Left-hand side plot: Scatter plot colored by cluster category
     sns.scatterplot(x=x, y=y, hue=hue, data=df.sort_values(hue), alpha=0.3, palette=palette, linewidth=0, ax=axs[0])
-    axs[0].vlines(df[x].mean(), 0, 1, color=vline_color, linewidth=1.15, linestyles='--',
-                  label=f'Mean {x}')
-    axs[0].hlines(df[y].mean(), 0, 1, color=hline_color, linewidth=1.15, linestyles='--',
+    axs[0].vlines(df[x].mean(), ymin=ymin, ymax=ymax, color=vline_color, linewidth=1.15, linestyles='--', label=f'Mean {x}')
+    axs[0].hlines(df[y].mean(), xmin=xmin, xmax=xmax, color=hline_color, linewidth=1.15, linestyles='--',
                   label=f'Mean {y}')
     axs[0].set_xlabel(x, fontsize=12)
     axs[0].set_ylabel(y, fontsize=12)
     axs[0].set_title('Scatter plot by cluster', fontsize=13)
-    axs[0].set_xlim(-0.1, 1.1)
-    axs[0].set_ylim(-0.05, 1.05)
+    axs[0].set_xlim(xmin, xmax)
+    axs[0].set_ylim(ymin, ymax)
 
     # Right-hand side plot: Cluster centroids with optional kernel density area
     sns.scatterplot(x=x, y=y, hue=hue, data=df.groupby(hue).mean().reset_index(),
@@ -272,8 +286,10 @@ def plot_clusters_2D(x, y, hue, df, style_kwargs=dict(), output_path=None, savef
         sns.kdeplot(x=x, y=y, hue=hue, data=df.sort_values(hue), levels=1, alpha=0.2, palette=palette,
                     ax=axs[1])
 
-    axs[1].vlines(df[x].mean(), 0, 1, color=vline_color, linewidth=1, linestyles='--', label=f'Mean {x}')
-    axs[1].hlines(df[y].mean(), 0, 1, color=hline_color, linewidth=1, linestyles='--', label=f'Mean {y}')
+    axs[1].vlines(df[x].mean(), ymin=ymin, ymax=ymax, color=vline_color, linewidth=1, linestyles='--',
+                  label=f'Mean {x}')
+    axs[1].hlines(df[y].mean(), xmin=xmin, xmax=xmax, color=hline_color, linewidth=1, linestyles='--',
+                  label=f'Mean {y}')
     axs[1].set_xlabel(x, fontsize=12)
     axs[1].set_ylabel(y, fontsize=12)
     axs[1].set_title('Cluster centroids', fontsize=13)
@@ -316,7 +332,7 @@ def plot_cat_distribution_by_cluster(ct, cat_label=None, cluster_label=None, out
         xcenters = left + widths / 2
         for y, (x, w) in enumerate(zip(xcenters, widths)):
             if w > 0.05:
-                color = '#737373' if i < 2 else '#d9d9d9'
+                color = '#737373' if i < len(ct.columns)//2 else '#d9d9d9'
                 plt.text(x, y, f'{str(np.round(w * 100, 1))}%', ha='center', va='center', color=color, fontsize=12,
                          weight='light')
 
