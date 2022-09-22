@@ -25,11 +25,17 @@ class Classifier(base.BaseEstimator, base.TransformerMixin):
         List of columns to use as predictors.
     target : `numpy.array` or list
         values of the target variable.
+    num_cols : list, default=None
+        List of numerical columns to use as predictors.
+    cat_cols : list, default=None
+        List of categorical columns to use as predictors.
     """
 
-    def __init__(self, df, predictor_cols, target):
+    def __init__(self, df, predictor_cols, target, num_cols=None, cat_cols=None):
         self.df = df
         self.original_features = predictor_cols
+        self.num_vars = num_cols
+        self.cat_vars = cat_cols
         self.filtered_features = None
         self.target = target
         self.model_ = None
@@ -89,10 +95,12 @@ class Classifier(base.BaseEstimator, base.TransformerMixin):
             self.logger.info('Running feature selection...')
             if feature_selection_model is None:
                 min_samples_leaf = int(np.ceil(self.df.shape[0] * 0.05))
-                feature_selection_model = RandomForestClassifier(max_depth=10,  min_samples_leaf=min_samples_leaf)
+                feature_selection_model = RandomForestClassifier(max_depth=10,  min_samples_leaf=min_samples_leaf,
+                                                                 random_state=42)
 
             self.filtered_features = utils.feature_selection(self.df, self.original_features, self.target,
-                                                             feature_selection_model, features_to_keep)
+                                                             feature_selection_model, self.num_vars, self.cat_vars,
+                                                             features_to_keep)
         else:
             self.filtered_features = self.original_features.copy()
 
@@ -103,7 +111,7 @@ class Classifier(base.BaseEstimator, base.TransformerMixin):
 
         # Model instantiation
         if model is None:
-            model = XGBClassifier(eval_metric='auc')
+            model = XGBClassifier(eval_metric='auc', random_state=42)
         self.model_ = model
 
         # Hyperparameter tuning
@@ -222,13 +230,32 @@ class Classifier(base.BaseEstimator, base.TransformerMixin):
         Parameters
         ----------
         n_top : int, default=7
-           Top n features to be displayed. The importances of the rest are aggregated and displayed under the tag "Rest".
+           Top n features to be displayed. The importance of the rest are aggregated and displayed under the tag "Rest".
         output_path : str, default=None
            Path to save figure as image.
         savefig_kws : dict, default=None
            Save figure options.
         """
         plot_shap_importances(self.model_, self.X_train_, n_top=n_top, output_path=output_path, savefig_kws=savefig_kws)
+
+    def plot_shap_importances_beeswarm(self, class_id, n_top=10, output_path=None, savefig_kws=None):
+        """
+        Plots a summary of shap values for a specific class of the target variable. This uses shap beeswarm plot
+        (https://shap.readthedocs.io/en/latest/example_notebooks/api_examples/plots/beeswarm.html).
+
+        Parameters
+        ----------
+        class_id : int
+            The class for which to show the SHAP values.
+        n_top : int, default=7
+            Top n features to be displayed. The importances of the rest are aggregated and displayed under the tag "Rest".
+        output_path : str, default=None
+            Path to save figure as image.
+        savefig_kws : dict, default=None
+            Save figure options.
+        """
+        plot_shap_importances_beeswarm(self.model_, self.X_train_, class_id, n_top=n_top, output_path=output_path,
+                                       savefig_kws=savefig_kws)
 
     def plot_confusion_matrix(self, test=True, sum_stats=True, output_path=None, savefig_kws=None):
         """

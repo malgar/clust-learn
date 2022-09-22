@@ -44,16 +44,65 @@ def shap_importances(classifier, X):
     return importances
 
 
-def feature_selection(df, original_features, target, classifier, features_to_keep=[], hi_corr_kws=None,
-                      rfecv_kws=None):
+def _compute_highly_related_pairs(df, num_vars=None, cat_vars=None, num_kws=None, mixed_kws=None, cat_kws=None):
+    """
+    Computes strongly related pairs of variables. Depending on the type of variables, a correlation coefficient
+    (numerical variables), partial eta squared (mixed-type variables), or mutual information (categorical variables) is
+    used to measured the strength of the relationship of each pair.
+
+    Parameters
+    ----------
+    df : `pandas.DataFrame`
+        DataFrame containing the data.
+    num_vars : str, list, series, or vector array
+        Numerical variable name(s).
+    cat_vars : str, list, series, or vector array
+        Categorical variable name(s).
+    {num,mixed,cat}_kws : dict, default=None
+        Additional keyword arguments to pass to `compute_high_corr_pairs()`, `compute_highly_related_mixed_vars()`, and
+        `compute_highly_related_categorical_vars()`.
+
+    Returns
+    ----------
+    final_pairs : `pandas.DataFrame`
+        DataFrame with pairs of highly correlated variables (var1: variable with values to impute; var2: variable to be
+        used as independent variable for model-based imputation).
+    """
+    if num_vars is None and cat_vars is None:
+        raise ValueError('Numerical or categorical variable lists are required.')
+
+    # Numerical variable pairs (correlation)
+    num_pairs = pd.DataFrame()
+    if num_vars:
+        num_kws = num_kws if num_kws else dict()
+        num_pairs = compute_high_corr_pairs(df[num_vars], **num_kws)
+
+    # Mixed variable pairs (cross correlation)
+    mixed_pairs = pd.DataFrame()
+    if num_vars and cat_vars:
+        mixed_kws = mixed_kws if mixed_kws else dict()
+        mixed_pairs = compute_highly_related_mixed_vars(df, num_vars, cat_vars, **mixed_kws)
+
+    # Categorical variable pairs (mutual information)
+    cat_pairs = pd.DataFrame()
+    if cat_vars:
+        cat_kws = cat_kws if cat_kws else dict()
+        cat_pairs = compute_highly_related_categorical_vars(df[cat_vars], **cat_kws)
+
+    final_pairs = pd.concat([num_pairs, mixed_pairs, cat_pairs], ignore_index=True)
+    return final_pairs
+
+
+def feature_selection(df, original_features, target, classifier, num_vars=None, cat_vars=None, features_to_keep=[],
+                      num_kws=None, mixed_kws=None, cat_kws=None, rfecv_kws=None):
     """
     Performs feature selection in three steps:
-        - First, if some features want to be kept (informed in `features_to_keep`), those other
-          features that highly correlated with those in `features_to_keep` are removed.
+        - First, if some features must be kept (informed in `features_to_keep`), those other
+          features that highly related with those in `features_to_keep` are removed.
 
         - Next, a classifier is iteratively trained to obtain feature shap importances.
           In each iteration, the feature with the highest shape importance which has not been previously
-          visited is selected and all other highly correlated features are removed.
+          visited is selected and all other highly related features are removed.
 
         - Finally, Recursive Feature Elimination with Cross-Validation (RFECV) is applied on the remaining
           features.
@@ -63,18 +112,21 @@ def feature_selection(df, original_features, target, classifier, features_to_kee
     df : `pandas.DataFrame`
         DataFrame containing, at least, all variables in `original_features`
     original_features : `numpy.array` or list
-        Array of original features to select from.
+        Array of original features to select from. `original_features` = `num_vars` + `cat_vars`.
     target : `numpy.array` or list
         Array with target values. This is the dependent variable values.
-    features_to_keep: list, default=[]
-        In case some features are of special interest to the analysis and should be kept.
     classifier : estimator
         Should be an instance of `scikit-learn.Estimator`, `scikit-learn.Predictor`, `scikit-learn.Transformer`,
         and `scikit-learn.Model`.
-    hi_corr_kws : dictionary, default=None
-        Dictionary for highly-correlated feature calculation. Supported parameters:
-        - corr_thres : Correlation threshold, default=0.8
-        - method : Correlation method, default='pearson'
+    num_vars : `numpy.array` or list, default=None
+        Array of numerical features. All variable in `num_vars` must be in `original_features`.
+    cat_vars : `numpy.array` or list, default=None
+        Array of categorical features. All variable in `cat_vars` must be in `original_features`.
+    features_to_keep: list, default=[]
+        In case some features are of special interest to the analysis and should be kept.
+    {num,mixed,cat}_kws : dict, default=None
+        Additional keyword arguments to pass to `compute_high_corr_pairs()`, `compute_highly_related_mixed_vars()`, and
+        `compute_highly_related_categorical_vars()`.
     rfecv_kws : dictionary, default=None
         Dictionary for RFECV.
 
@@ -84,17 +136,20 @@ def feature_selection(df, original_features, target, classifier, features_to_kee
         List with selected features.
     """
 
-    # First, we compute highly-correlated pairs of variables
-    if hi_corr_kws is None:
-        hi_corr_kws = dict()
-    hi_corr = compute_high_corr_pairs(df[original_features], **hi_corr_kws)
+    assert (len(original_features) == (len(num_vars) if num_vars else 0) + (len(cat_vars) if cat_vars else 0),
+            "`original_features` != `num_vars` + `cat_vars`")
+
+    # First, we compute highly related pairs of variables
+    if num_kws is None:
+        num_kws = dict(corr_thres=0.8)
+    hi_rel = _compute_highly_related_pairs(df, num_vars, cat_vars, num_kws, mixed_kws, cat_kws)
 
     filtered_features = original_features.copy()
 
-    if hi_corr.shape[0] > 0:
-        # Next, we remove variables highly correlated with the ones indicated to be kept)
+    if hi_rel.shape[0] > 0:
+        # Next, we remove variables highly correlated with the ones indicated to be kept
         for v in features_to_keep:
-            for v2 in hi_corr.loc[hi_corr['var1'] == v, 'var2'].to_list():
+            for v2 in hi_rel.loc[hi_rel['var1'] == v, 'var2'].to_list():
                 if v2 in filtered_features:
                     if v2 in features_to_keep:
                         logger.warning(
@@ -103,12 +158,12 @@ def feature_selection(df, original_features, target, classifier, features_to_kee
                         filtered_features.remove(v2)
 
         # We update the highly-correlated pair DataFrame for efficiency purposes
-        hi_corr = compute_high_corr_pairs(df[filtered_features], **hi_corr_kws)
+        hi_rel = _compute_highly_related_pairs(df, num_vars, cat_vars, num_kws, mixed_kws, cat_kws)
 
-    if hi_corr.shape[0] > 0:
+    if hi_rel.shape[0] > 0:
         # Next, we remove highly correlated variables iteratively, keeping the most impactful one
         # We identify the most impactful one using a classification algorithm and SHAP importances
-        # In every iteration, we romove all variables with a high correlation to the unvisited variable
+        # In every iteration, we remove all variables with a high correlation to the unvisited variable
         # with the highest SHAP importance value
         stop = False
         visited = []
@@ -119,9 +174,9 @@ def feature_selection(df, original_features, target, classifier, features_to_kee
             importances = shap_importances(classifier, X)
             updated = False
             for feat in importances['variable_name']:
-                if feat in hi_corr['var1'].to_list() and feat not in visited:
+                if feat in hi_rel['var1'].to_list() and feat not in visited:
                     visited.append(feat)
-                    for var2 in hi_corr.loc[hi_corr['var1'] == feat, 'var2'].to_list():
+                    for var2 in hi_rel.loc[hi_rel['var1'] == feat, 'var2'].to_list():
                         if var2 in filtered_features and var2 not in features_to_keep:
                             filtered_features.remove(var2)
                     updated = True

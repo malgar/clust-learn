@@ -3,6 +3,7 @@
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
+import shap
 import utils
 
 from matplotlib.collections import QuadMesh
@@ -42,6 +43,33 @@ def plot_shap_importances(model, X, n_top=7, output_path=None, savefig_kws=None)
     ax.set_xlabel('mean(|SHAP values|)', fontsize=12)
     ax.set_ylabel('')
     fig.tight_layout()
+    savefig(output_path, savefig_kws)
+
+
+def plot_shap_importances_beeswarm(model, X, class_id, n_top=10, output_path=None, savefig_kws=None):
+    """
+    Plots a summary of shap values for a specific class of the target variable. This uses shap beeswarm plot
+    (https://shap.readthedocs.io/en/latest/example_notebooks/api_examples/plots/beeswarm.html).
+
+    Parameters
+    ----------
+    model : `scikit-learn.Estimator`
+        Classification model (already trained).
+    X : `pandas.DataFrame` or `numpy.ndarray`
+        Observations (predictors).
+    class_id : int
+        The class for which to show the SHAP values.
+    n_top : int, default=7
+        Top n features to be displayed. The importances of the rest are aggregated and displayed under the tag "Rest".
+    output_path : str, default=None
+        Path to save figure as image.
+    savefig_kws : dict, default=None
+        Save figure options.
+    """
+    explainer = shap.Explainer(model)
+    shap_values = explainer(X)
+    shap.plots.beeswarm(shap_values[:, :, class_id], show=False, max_display=n_top+1)
+    plt.title(f'SHAP values summary for class {class_id}', fontsize=13)
     savefig(output_path, savefig_kws)
 
 
