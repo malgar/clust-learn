@@ -38,7 +38,7 @@ def compute_high_corr_pairs(df, corr_thres=0.7, method='pearson'):
     return num_pairs
 
 
-def compute_highly_related_mixed_vars(df, num_vars, cat_vars, cross_corr_thres=0.14):
+def compute_highly_related_mixed_vars(df, num_vars, cat_vars, np2_thres=0.14):
     """
     Computes the dependency between pairs of numerical and categorical variables through partial eta squared, and
     returns those pairs with a value above the given threshold.
@@ -51,7 +51,7 @@ def compute_highly_related_mixed_vars(df, num_vars, cat_vars, cross_corr_thres=0
         Numerical variable name(s).
     cat_vars : string, list, series, or vector array
         Categorical variable name(s).
-    cross_corr_thres : float, default=0.14
+    np2_thres : float, default=0.14
         Threshold to consider two variables as strongly related (see
         https://www.spss-tutorials.com/effect-size/#anova-partial-eta-squared).
 
@@ -61,9 +61,8 @@ def compute_highly_related_mixed_vars(df, num_vars, cat_vars, cross_corr_thres=0
         DataFrame with pairs of highly correlated variables together with the partial eta squared value.
     """
     cross_corr_df = cross_corr_ratio(df[cat_vars], df[num_vars])
-    # We keep only the pairs with a cross correlation coefficient above the threshold and melt the notebook to have a
-    # row per pair
-    pairs = cross_corr_df[cross_corr_df > cross_corr_thres].reset_index()\
+    # We keep only the pairs with a np2 above the threshold and melt the notebook to have a row per pair
+    pairs = cross_corr_df[cross_corr_df > np2_thres].reset_index()\
         .melt(id_vars='index', value_vars=cross_corr_df.columns[1:]) .dropna()\
         .sort_values('value', ascending=False).rename(columns={'index': 'var1', 'variable': 'var2'})\
         .reset_index(drop=True)

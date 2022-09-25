@@ -5,7 +5,6 @@ import pandas as pd
 import statsmodels.api as sm
 
 from scipy.stats import chi2_contingency
-from sklearn import base
 from sklearn.cluster import AgglomerativeClustering, KMeans
 from sklearn.metrics import calinski_harabasz_score, davies_bouldin_score, silhouette_score
 from sklearn.preprocessing import MinMaxScaler
@@ -22,7 +21,7 @@ KMEANS = ['kmeans', 'kmeans++']
 HIERARCHICAL_WARD = ['ward', 'hierarchical', 'agglomerative']
 
 
-class Clustering(base.BaseEstimator, base.TransformerMixin):
+class Clustering:
     """
     Clustering class
 

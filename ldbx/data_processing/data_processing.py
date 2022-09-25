@@ -60,8 +60,7 @@ def num_imputation_pairs(df, corr_thres=0.7, method='pearson'):
     return compute_high_corr_pairs(df, corr_thres=corr_thres, method=method)
 
 
-# TODO: Rename cross correlation with partial eta squared
-def mixed_imputation_pairs(df, num_vars, cat_vars, cross_corr_thres=0.14):
+def mixed_imputation_pairs(df, num_vars, cat_vars, np2_thres=0.14):
     """
     Computes the dependency between pairs of numerical and categorical variables through partial eta squared, and
     returns those pairs with a value above the given threshold.
@@ -74,7 +73,7 @@ def mixed_imputation_pairs(df, num_vars, cat_vars, cross_corr_thres=0.14):
         Numerical variable name(s).
     cat_vars : string, list, series, or vector array
         Categorical variable name(s).
-    cross_corr_thres : float, default=0.14
+    np2_thres : float, default=0.14
         Threshold to consider two variables as strongly related (see
         https://www.spss-tutorials.com/effect-size/#anova-partial-eta-squared).
 
@@ -83,7 +82,7 @@ def mixed_imputation_pairs(df, num_vars, cat_vars, cross_corr_thres=0.14):
     pairs : `pandas.DataFrame`
         DataFrame with pairs of highly correlated variables together with the partial eta squared value.
     """
-    return compute_highly_related_mixed_vars(df, num_vars, cat_vars, cross_corr_thres)
+    return compute_highly_related_mixed_vars(df, num_vars, cat_vars, np2_thres)
 
 
 def cat_imputation_pairs(df, mi_thres=0.6):
@@ -499,9 +498,9 @@ def impute_missing_values(df, num_vars, cat_vars, num_pair_kws=None, mixed_pair_
         Threshold to determine if two variables are similar based on mutual information score, and therefore should be
         considered as edges of the graph from which variable clusters are derived.
     k : int, default=8
-        Number of neighbors to consider in hot deck imptation.
-    max_missing_thres: float, default=1/3
-        Max proportion os missing values per record allowed before final general hot deck imputation.
+        Number of neighbors to consider in hot deck imputation.
+    max_missing_thres: float, default=0.33
+        Max proportion of missing values per record allowed before final general hot deck imputation.
 
     Returns
     ----------

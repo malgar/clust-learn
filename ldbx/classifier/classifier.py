@@ -1,10 +1,10 @@
 """Classification class"""
+# Author: Miguel Alvarez
 
 import logging
 import numpy as np
 import utils
 
-from sklearn import base
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report, confusion_matrix
 from sklearn.model_selection import train_test_split
@@ -13,7 +13,7 @@ from xgboost import XGBClassifier
 from viz_utils import *
 
 
-class Classifier(base.BaseEstimator, base.TransformerMixin):
+class Classifier:
     """
     Class to manage the classification model.
 
