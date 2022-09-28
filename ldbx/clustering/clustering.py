@@ -48,14 +48,14 @@ class Clustering:
             mms = MinMaxScaler()
             self.df = pd.DataFrame(mms.fit_transform(df), columns=df.columns)
 
-        self.dimensions = list(df.columns)
+        self.dimensions_ = list(df.columns)
 
         if not isinstance(algorithms, list):
             algorithms = [algorithms]
-        self.algorithms = list(map(str.lower, algorithms))
+        self.algorithms_ = list(map(str.lower, algorithms))
 
         self.instances_ = dict()
-        for algorithm in self.algorithms:
+        for algorithm in self.algorithms_:
             if algorithm in KMEANS:
                 self.instances_[algorithm] = KMeans(random_state=42)
             elif algorithm in HIERARCHICAL_WARD:
@@ -67,42 +67,42 @@ class Clustering:
         self.scores_ = dict()
         self._initialize_scores()
 
-        self.metric = 'inertia'
+        self.metric_ = 'inertia'
         self.optimal_config_ = None
 
     def _initialize_scores(self):
-        for algorithm in self.algorithms:
+        for algorithm in self.algorithms_:
             if algorithm in KMEANS + HIERARCHICAL_WARD:
                 self.scores_[algorithm] = []
 
     def _compute_clusters(self, algorithm, n_clusters):
         self.instances_[algorithm].set_params(n_clusters=n_clusters)
-        self.instances_[algorithm].fit(self.df[self.dimensions])
+        self.instances_[algorithm].fit(self.df[self.dimensions_])
         self.labels_ = self.instances_[algorithm].labels_
 
     def _compute_optimal_clustering_config(self, metric, cluster_range, weights):
         optimal_list = []
-        for algorithm in self.algorithms:
+        for algorithm in self.algorithms_:
             for nc in range(*cluster_range):
                 self.instances_[algorithm].set_params(n_clusters=nc)
-                self.instances_[algorithm].fit(self.df[self.dimensions])
+                self.instances_[algorithm].fit(self.df[self.dimensions_])
 
                 if metric == 'inertia':
                     self.scores_[algorithm].append(
-                        weighted_sum_of_squared_distances(self.df[self.dimensions], self.instances_[algorithm].labels_,
+                        weighted_sum_of_squared_distances(self.df[self.dimensions_], self.instances_[algorithm].labels_,
                                                           weights))
                 elif metric == 'davies_bouldin_score':
                     self.scores_[algorithm].append(
-                        1 if nc == 1 else davies_bouldin_score(self.df[self.dimensions],
+                        1 if nc == 1 else davies_bouldin_score(self.df[self.dimensions_],
                                                                self.instances_[algorithm].labels_))
                 elif metric == 'silhouette_score':
                     self.scores_[algorithm].append(
-                        0 if nc == 1 else silhouette_score(self.df[self.dimensions],
+                        0 if nc == 1 else silhouette_score(self.df[self.dimensions_],
                                                            self.instances_[algorithm].labels_))
 
                 elif metric == 'calinski_harabasz_score':
                     self.scores_[algorithm].append(
-                        1 if nc == 1 else calinski_harabasz_score(self.df[self.dimensions],
+                        1 if nc == 1 else calinski_harabasz_score(self.df[self.dimensions_],
                                                                   self.instances_[algorithm].labels_))
 
             if len(range(*cluster_range)) > 1:
@@ -154,7 +154,7 @@ class Clustering:
                                Supported metrics: {__metrics__}''')
 
         self._initialize_scores()
-        self.metric = metric
+        self.metric_ = metric
 
         # Compute optimal number of clusters
         cluster_range = []
@@ -211,7 +211,7 @@ class Clustering:
             df_ext = df_ext.copy()
             df_ext['cluster'] = self.labels_
         else:
-            df_ext = self.df[self.dimensions + ['cluster']]
+            df_ext = self.df[self.dimensions_ + ['cluster']]
 
         if variables is not None:
             if not isinstance(variables, list):
@@ -297,7 +297,7 @@ class Clustering:
             df_original['cluster'] = self.labels_
             return compare_cluster_means_to_global_means(df_original, var_names, output_path=None)
         else:
-            return compare_cluster_means_to_global_means(self.df, self.dimensions, data_standardized=not self.normalize,
+            return compare_cluster_means_to_global_means(self.df, self.dimensions_, data_standardized=not self.normalize,
                                                          output_path=None)
 
     def anova_tests(self, df_test=None, vars_test=None, cluster_filter=None, output_path=None):
@@ -328,7 +328,7 @@ class Clustering:
             df_test = df_test.copy()
             df_test['cluster'] = self.labels_
         else:
-            df_test = self.df[self.dimensions + ['cluster']]
+            df_test = self.df[self.dimensions_ + ['cluster']]
 
         if vars_test is not None:
             if not isinstance(vars_test, list):
@@ -387,7 +387,7 @@ class Clustering:
         savefig_kws : dict, default=None
             Save figure options.
         """
-        metric_name = METRIC_NAMES[self.metric]
+        metric_name = METRIC_NAMES[self.metric_]
 
         cluster_range = [1, self.optimal_config_[1] + 1]
         if len(self.scores_[self.optimal_config_[0]]) > 1:
@@ -411,7 +411,7 @@ class Clustering:
         if len(self.scores_[self.optimal_config_[0]]) > 1:
             plot_optimal_components_normalized(self.scores_[self.optimal_config_[0]],
                                                len(self.scores_[self.optimal_config_[0]]),
-                                               METRIC_NAMES[self.metric],
+                                               METRIC_NAMES[self.metric_],
                                                output_path, savefig_kws)
         else:
             raise RuntimeError('This plot can only be used when `cluster_range` contains at least 2 values')
@@ -462,7 +462,7 @@ class Clustering:
                                                           data_standardized=False, output_path=output_path,
                                                           savefig_kws=savefig_kws)
         else:
-            plot_cluster_means_to_global_means_comparison(self.df, self.dimensions, xlabel, ylabel, levels,
+            plot_cluster_means_to_global_means_comparison(self.df, self.dimensions_, xlabel, ylabel, levels,
                                                           data_standardized=not self.normalize, output_path=output_path,
                                                           savefig_kws=savefig_kws)
 
@@ -488,7 +488,7 @@ class Clustering:
         """
         sharey = self.normalize
         if df_ext is None:
-            df_ext = self.df[self.dimensions]
+            df_ext = self.df[self.dimensions_]
         else:
             sharey = False
 
@@ -525,9 +525,9 @@ class Clustering:
             Save figure options.
         """
         if isinstance(coor1, int):
-            coor1 = self.dimensions[coor1]
+            coor1 = self.dimensions_[coor1]
         if isinstance(coor2, int):
-            coor2 = self.dimensions[coor2]
+            coor2 = self.dimensions_[coor2]
 
         df_ext = self.df
         if isinstance(coor1, pd.Series):
