@@ -36,7 +36,7 @@ class Classifier:
         self.original_features = predictor_cols
         self.num_vars = num_cols
         self.cat_vars = cat_cols
-        self.filtered_features = None
+        self.filtered_features_ = None
         self.target = target
         self.model_ = None
         self.X_train_, self.X_test_, self.y_train_, self.y_test_ = tuple([None]*4)
@@ -98,14 +98,14 @@ class Classifier:
                 feature_selection_model = RandomForestClassifier(max_depth=10,  min_samples_leaf=min_samples_leaf,
                                                                  random_state=42)
 
-            self.filtered_features = utils.feature_selection(self.df, self.original_features, self.target,
+            self.filtered_features_ = utils.feature_selection(self.df, self.original_features, self.target,
                                                              feature_selection_model, self.num_vars, self.cat_vars,
                                                              features_to_keep)
         else:
-            self.filtered_features = self.original_features.copy()
+            self.filtered_features_ = self.original_features.copy()
 
         # Data is split into train and test sets
-        X = self.df[self.filtered_features]
+        X = self.df[self.filtered_features_]
         y = self.target
         self.X_train_, self.X_test_, self.y_train_, self.y_test_ = train_test_split(X, y, train_size=train_size)
 

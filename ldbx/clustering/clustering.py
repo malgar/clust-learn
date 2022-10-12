@@ -52,10 +52,10 @@ class Clustering:
 
         if not isinstance(algorithms, list):
             algorithms = [algorithms]
-        self.algorithms_ = list(map(str.lower, algorithms))
+        self.algorithms = list(map(str.lower, algorithms))
 
         self.instances_ = dict()
-        for algorithm in self.algorithms_:
+        for algorithm in self.algorithms:
             if algorithm in KMEANS:
                 self.instances_[algorithm] = KMeans(random_state=42)
             elif algorithm in HIERARCHICAL_WARD:
@@ -71,7 +71,7 @@ class Clustering:
         self.optimal_config_ = None
 
     def _initialize_scores(self):
-        for algorithm in self.algorithms_:
+        for algorithm in self.algorithms:
             if algorithm in KMEANS + HIERARCHICAL_WARD:
                 self.scores_[algorithm] = []
 
@@ -82,7 +82,7 @@ class Clustering:
 
     def _compute_optimal_clustering_config(self, metric, cluster_range, weights):
         optimal_list = []
-        for algorithm in self.algorithms_:
+        for algorithm in self.algorithms:
             for nc in range(*cluster_range):
                 self.instances_[algorithm].set_params(n_clusters=nc)
                 self.instances_[algorithm].fit(self.df[self.dimensions_])
@@ -295,10 +295,10 @@ class Clustering:
             var_names = list(df_original.columns)
             df_original = df_original.copy()
             df_original['cluster'] = self.labels_
-            return compare_cluster_means_to_global_means(df_original, var_names, output_path=None)
+            return compare_cluster_means_to_global_means(df_original, var_names, output_path=output_path)
         else:
             return compare_cluster_means_to_global_means(self.df, self.dimensions_, data_standardized=not self.normalize,
-                                                         output_path=None)
+                                                         output_path=output_path)
 
     def anova_tests(self, df_test=None, vars_test=None, cluster_filter=None, output_path=None):
         """
@@ -492,9 +492,8 @@ class Clustering:
         else:
             sharey = False
 
-        plot_distribution_comparison_by_cluster(df_ext, self.labels_, xlabel=xlabel, ylabel=ylabel,
-                                                sharey=sharey, output_path=output_path,
-                                                savefig_kws=savefig_kws)
+        plot_distribution_by_cluster(df_ext, self.labels_, xlabel=xlabel, ylabel=ylabel, sharey=sharey,
+                                     output_path=output_path, savefig_kws=savefig_kws)
 
     def plot_clusters_2D(self, coor1, coor2, style_kwargs=dict(), output_path=None, savefig_kws=None):
         """
@@ -540,7 +539,8 @@ class Clustering:
             coor2 = coor2.name
 
         hue = 'cluster_cat'
-        plot_clusters_2D(coor1, coor2, hue, df_ext, style_kwargs=dict(), output_path=None, savefig_kws=None)
+        plot_clusters_2D(coor1, coor2, hue, df_ext, style_kwargs=style_kwargs, output_path=output_path,
+                         savefig_kws=savefig_kws)
 
     def plot_cat_distribution_by_cluster(self, cat_array, cat_label=None, cluster_label=None, output_path=None,
                                          savefig_kws=None):

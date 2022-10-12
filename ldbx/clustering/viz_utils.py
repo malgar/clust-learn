@@ -154,8 +154,8 @@ def plot_cluster_means_to_global_means_comparison(df, dimensions, xlabel=None, y
     savefig(output_path=output_path, savefig_kws=savefig_kws)
 
 
-def plot_distribution_comparison_by_cluster(df, cluster_labels, xlabel=None, ylabel=None, sharex=True, sharey=True,
-                                            output_path=None, savefig_kws=None):
+def plot_distribution_by_cluster(df, cluster_labels, xlabel=None, ylabel=None, sharex=True, sharey=True,
+                                 output_path=None, savefig_kws=None):
     """
     Plots the violin plots per cluster and *continuous* variables of interest to understand differences in their
     distributions by cluster.
