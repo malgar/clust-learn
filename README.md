@@ -245,7 +245,7 @@ dr = DimensionalityReduction(df, num_vars=None, cat_vars=None, num_algorithm='pc
 ```
 
 | Parameter | Type | Description |
-|-|-|-|
+|:-|:-|:-|
 | `df` | `pandas.DataFrame` | Data table containing the data with the original variables |
 | `num_vars` | `string`, `list`, `pandas.Series`, or `numpy.array` | Numerical variable name(s) |
 | `cat_vars` | `string`, `list`, `pandas.Series`, or `numpy.array` | Categorical variable name(s) |
