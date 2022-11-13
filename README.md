@@ -1,6 +1,6 @@
 <!-- title -->
 <div align="center">
-  <h2>ldbx: Large Database Explainer</h2>
+  <h3>ldbx: Large Database Explainer</h3>
 </div>
 
 <!-- Short description -->
@@ -11,8 +11,8 @@
 <hr>
 
 ## Table of contents
-- [1. Introduction](#introduction)
-- [[#user-content-intro][1 Introduction]]
+1. [Introduction](#introduction)
+2. [[#user-content-intro][1 Introduction]]
 - [[#user-content-architecture][2 Overall architecture]]
 - [[#user-content-implementation][3 Implementation]]
 - [[#user-content-install][4 Installation and configuration]]
