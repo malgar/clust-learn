@@ -1,9 +1,15 @@
-# ldbx: Large Database Explainer
+<!-- title -->
+<div align="center">
+  <h1>ldbx: Large Database Explainer</h1>
+</div>
 
-A Python package for extracting valuable information from large databases.
+<!-- Short description -->
+<p align="center">
+   A Python package for extracting valuable information from large databases.
+</p>
 
 ## Table of contents
-- [Introduction](#introduction)
+- [1. Introduction](#introduction)
 - [[#user-content-intro][1 Introduction]]
 - [[#user-content-architecture][2 Overall architecture]]
 - [[#user-content-implementation][3 Implementation]]
@@ -18,7 +24,7 @@ A Python package for extracting valuable information from large databases.
 	- [[#user-content-module-clustering][7.3 Clustering]]
 	- [[#user-content-module-classifier][7.4 Classifier]]
 
-## Introduction
+## 1. Introduction
 
 Here the intro
 
