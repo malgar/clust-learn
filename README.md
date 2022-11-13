@@ -20,15 +20,17 @@
 7. [User guide & API](#user-content-api)
 	1. [Data processing](#user-content-module-preprocessing)
 		1. [Data imputation](#user-content-module-preprocessing-imputation)
-			1. [compute_missing()](#compute_missing)
-			2. [impute_missing_values()](#impute_missing_values)
-			3. [missing_values_heatmap()](#missing_values_heatmap)
+			- [compute_missing()](#compute_missing)
+			- [impute_missing_values()](#impute_missing_values)
+			- [missing_values_heatmap()](#missing_values_heatmap)
 		2. [Outliers](#user-content-module-preprocessing-outliers)
-			1. [remove_outliers()](#remove_outliers)
+			- [remove_outliers()](#remove_outliers)
 	2. [Dimensionality reduction](#user-content-module-dimensionality)
-		1. [DimensionalityReduction class](#DimensionalityReduction_class)
+		- [DimensionalityReduction class](#DimensionalityReduction_class)
 	3. [Clustering](#user-content-module-clustering)
+		- [Clustering class](#Clustering_class)
 	4. [Classifier](#user-content-module-classifier)
+		- [Classifier class](#Classifier_class)
 8. [Citing](#user-content-citing)
 
 <h2 id="user-content-introduction">
@@ -235,7 +237,7 @@ Removes outliers using the [Isolation Forest algorithm](https://scikit-learn.org
 All the functionality of this module is encapsulated in the `DimensionalityReduction` class so that the original data, the instances of the models used, and any other relevant information is self-maintained and always accessible.
 
 <h4 id="DimensionalityReduction_class">
-DimensionalityReduction
+DimensionalityReduction class
 </h4>
 
 ```
@@ -251,8 +253,7 @@ dr = DimensionalityReduction(df, num_vars=None, cat_vars=None, num_algorithm='pc
 | `cat_algorithm` | `string` | Algorithm to be used for dimensionality reduction of categorical variables. By default, MCA is used. The current version doesn’t support other algorithms |
 | `num_kwargs` | `dictionary` | Additional keyword arguments to pass to the model used for numerical variables |
 | `cat_kwargs` | `dictionary` | Additional keyword arguments to pass to the model used for categorical variables |
-| Attribute | Type | Description |
-|-|-|-|
+| **Attribute** | **Type** | **Description** |
 | `n_components_` | `int` | Final number of extracted components |
 | `min_explained_variance_ratio_` | `float` | Minimum explained variance ratio. By default, 0.5 |
 | `num_trans_` | `pandas.DataFrame` | Extracted components from numerical variables |
@@ -267,13 +268,58 @@ dr = DimensionalityReduction(df, num_vars=None, cat_vars=None, num_algorithm='pc
 7.iii. Clustering
 </h3>
 
-<<TO-DO>>
+The `Clustering` class encapsulates all the functionality of this module and stores the data, the instances of the algorithms used, and other relevant information so it is always accessible.
+
+<h4 id="Clustering_class">
+Clustering class
+</h4>
+
+```
+cl = Clustering(df, algorithms='kmeans', normalize=False)
+```
+
+| Parameter | Type | Description |
+|-|-|-|
+| `df` | `pandas.DataFrame` | Data frame containing the data to be clustered |
+| `algorithms` | `string` or `list` | Algorithms to be used for clustering. The current version supports k-means and agglomerative clustering |
+| `normalize` | `bool` | Whether to apply data normalization for fair comparisons between variables. In case dimensionality reduction is applied beforehand, normalization should not be applied |
+| **Attribute** | **Type** | **Description** |
+| `dimensions_` | `list` | List of columns of they input data frame |
+| `instances_` | `dict` | Pairs of algorithm name and its instance |
+| `metric_` | `string` | The cluster validation metric used. Four metrics available: ['inertia', 'davies_bouldin_score', 'silhouette_score',  'calinski_harabasz_score'] |
+| `optimal_config_` | `tuple` | Tuple with the optimal configuration for clustering containing the algorithm name, number of clusters, and value of the chosen validation metric |
+| `scores_` | `dict` | Pairs of algorithm name and a list of values of the chosen validation metric for a cluster range |
+
 
 <h3 id="user-content-module-classifier">
 7.iv. Classifier
 </h3>
 
-<<TO-DO>>
+The functionality of this module is encapsulated in the `Classifier` class, which is also responsible for storing the original data, the instances of the models used, and any other relevant information.
+
+<h4 id="Classifier_class">
+Classifier class
+</h4>
+
+```
+classifier = Classifier(df, predictor_cols, target, num_cols=None, cat_cols=None)
+```
+
+| Parameter | Type | Description |
+|-|-|-|
+| df | pandas.DataFrame | Data frame containing the data |
+| predictor_cols | List of string | List of columns to use as predictors |
+| target | numpy.array or list | Values of the target variable |
+| num_cols | list | List of numerical columns from predictor_cols |
+| cat_cols | list | List of categorical columns from predictor_cols |
+| **Attribute** | **Type** | **Description** |
+| filtered_features_ | list | List of columns of the input data frame |
+| model_ | Instance of TransformerMixin and BaseEstimator from sklearn.base | Trained classifier |
+| X_train_ | numpy.array | Train split of predictors |
+| X_test_ | numpy.array | Test split of predictors |
+| y_train_ | numpy.array | Train split of target |
+| y_test_ | numpy.array | Test split of target |
+| grid_result_ | sklearn.model_selection.GridSearchCV | Instance of fitted estimator for hyperparameter tuning |
 
 <h2 id="user-content-citing">
 8. Citing
