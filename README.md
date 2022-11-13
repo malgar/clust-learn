@@ -74,6 +74,7 @@
 </h2>
 
 `ldbx` is organized into four modules:
+
 	1. Data preprocessing
 	2. Dimensionality reduction
 	3. Clustering
@@ -151,7 +152,7 @@ This function imputes missing values following this steps:
 **Returns**
 
 - `final_pairs` : `pandas.DataFrame`
-	- DataFrame with pairs of highly correlated variables (var1: variable with values to impute; var2: variable to be used as independent variable for model-based imputation), together proportion of missing values of variables var1 and var2.
+	- DataFrame with pairs of highly correlated variables (`var1`: variable with values to impute; `var2`: variable to be used as independent variable for model-based imputation), together proportion of missing values of variables `var1` and `var2`.
 
 <h4 id="missing_values_heatmap">
 missing_values_heatmap()
@@ -279,7 +280,7 @@ cl = Clustering(df, algorithms='kmeans', normalize=False)
 ```
 
 | Parameter | Type | Description |
-|-|-|-|
+|:-|:-|:-|
 | `df` | `pandas.DataFrame` | Data frame containing the data to be clustered |
 | `algorithms` | `string` or `list` | Algorithms to be used for clustering. The current version supports k-means and agglomerative clustering |
 | `normalize` | `bool` | Whether to apply data normalization for fair comparisons between variables. In case dimensionality reduction is applied beforehand, normalization should not be applied |
@@ -306,7 +307,7 @@ classifier = Classifier(df, predictor_cols, target, num_cols=None, cat_cols=None
 ```
 
 | Parameter | Type | Description |
-|-|-|-|
+|:-|:-|:-|
 | df | pandas.DataFrame | Data frame containing the data |
 | predictor_cols | List of string | List of columns to use as predictors |
 | target | numpy.array or list | Values of the target variable |
