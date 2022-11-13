@@ -20,11 +20,13 @@
 7. [User guide & API](#user-content-api)
 	1. [Data processing](#user-content-module-preprocessing)
 		1. [Data imputation](#user-content-module-preprocessing-imputation)
-			1. [impute_missing_values()](#impute_missing_values)
-			2. [missing_values_heatmap()](#missing_values_heatmap)
+			1. [compute_missing()](#compute_missing)
+			2. [impute_missing_values()](#impute_missing_values)
+			3. [missing_values_heatmap()](#missing_values_heatmap)
 		2. [Outliers](#user-content-module-preprocessing-outliers)
 			1. [remove_outliers()](#remove_outliers)
 	2. [Dimensionality reduction](#user-content-module-dimensionality)
+		1. [DimensionalityReduction class](#DimensionalityReduction_class)
 	3. [Clustering](#user-content-module-clustering)
 	4. [Classifier](#user-content-module-classifier)
 8. [Citing](#user-content-citing)
@@ -90,9 +92,29 @@ Data preprocessing consists of a set of manipulation and transformation tasks pe
 7.i.a. Data imputation
 </h4>
 
-<h5 id="impute_missing_values">
+<h4 id="compute_missing">
+compute_missing()
+</h4>
+
+```
+compute_missing(df, normalize=True)
+```
+
+Calculates the pct/count of missing values per column.
+
+**Parameters**
+
+- `df` : `pandas.DataFrame`
+- `normalize` : `boolean`, default=`True`
+
+**Returns**
+
+- `missing_df` : `pandas.DataFrame`
+	- DataFrame with the pct/counts of missing values per column.
+
+<h4 id="impute_missing_values">
 impute_missing_values()
-</h5>
+</h4>
 
 ```
 impute_missing_values(df, num_vars, cat_vars, num_pair_kws=None, mixed_pair_kws=None, cat_pair_kws=None, graph_thres=0.05, k=8, max_missing_thres=0.33)
@@ -114,9 +136,9 @@ This function imputes missing values following this steps:
 	- Categorical variable name(s).
 - `{num,mixed,cat}_pair_kws` : `dict`, default=`None`
 	- Additional keyword arguments to pass to compute imputation pairs for one-to-one model based imputation, namely:
-	For numerical pairs, corr_thres and method for setting the correlation coefficient threshold and method. By default, corr_thres=0.7 and method='pearson'.
-	For mixed-type pairs, np2_thres for setting the a threshold on partial eta square with 0.14 as default value.
-	For categorical pairs, mi_thres for setting a threshold on mutual information score. By default, mi_thres=0.6.
+		- For numerical pairs, `corr_thres` and `method` for setting the correlation coefficient threshold and method. By default, `corr_thres=0.7` and `method='pearson'`.
+		- For mixed-type pairs, `np2_thres` for setting the a threshold on partial *eta* square with 0.14 as default value.
+		- For categorical pairs, `mi_thres` for setting a threshold on mutual information score. By default, `mi_thres=0.6`.
 - `graph_thres` : `float`, default=0.05
 	- Threshold to determine if two variables are similar based on mutual information score, and therefore are an edge of the graph from which variable clusters are derived.
 - `k` : `int`, default=8
@@ -129,9 +151,9 @@ This function imputes missing values following this steps:
 - `final_pairs` : `pandas.DataFrame`
 	- DataFrame with pairs of highly correlated variables (var1: variable with values to impute; var2: variable to be used as independent variable for model-based imputation), together proportion of missing values of variables var1 and var2.
 
-<h5 id="missing_values_heatmap">
+<h4 id="missing_values_heatmap">
 missing_values_heatmap()
-</h5>
+</h4>
 
 ```
 missing_values_heatmap(df, output_path=None, savefig_kws=None)
@@ -148,9 +170,9 @@ Plots a heatmap to visualize missing values (light color).
 - `savefig_kws` : `dict`, default=`None`
    - Save figure options.
    
-<h5 id="plot_imputation_distribution_assessment">
+<h4 id="plot_imputation_distribution_assessment">
 plot_imputation_distribution_assessment()
-</h5>
+</h4>
 
 ```
 plot_imputation_distribution_assessment(df_prior, df_posterior, imputed_vars, sample_frac=1.0, prior_kws=None, posterior_kws=None, output_path=None, savefig_kws=None)
@@ -179,9 +201,9 @@ Plots a distribution comparison of each variable with imputed variables, before 
 7.i.b. Outliers
 </h4>
 
-<h5 id="remove_outliers">
+<h4 id="remove_outliers">
 remove_outliers()
-</h5>
+</h4>
 
 ```
 remove_outliers(df, variables, iforest_kws=None)
@@ -210,7 +232,37 @@ Removes outliers using the [Isolation Forest algorithm](https://scikit-learn.org
 7.ii. Dimensionality reduction
 </h3>
 
-<<TO-DO>>
+All the functionality of this module is encapsulated in the `DimensionalityReduction` class so that the original data, the instances of the models used, and any other relevant information is self-maintained and always accessible.
+
+<h4 id="DimensionalityReduction_class">
+DimensionalityReduction
+</h4>
+
+```
+dr = DimensionalityReduction(df, num_vars=None, cat_vars=None, num_algorithm='pca', cat_algorithm='mca', num_kwargs=None, cat_kwargs=None)
+```
+
+| Parameter | Type | Description |
+|-|-|-|
+| `df` | `pandas.DataFrame` | Data table containing the data with the original variables |
+| `num_vars` | `string`, `list`, `pandas.Series`, or `numpy.array` | Numerical variable name(s) |
+| `cat_vars` | `string`, `list`, `pandas.Series`, or `numpy.array` | Categorical variable name(s) |
+| `num_algorithm` | `string` | Algorithm to be used for dimensionality reduction of numerical variables. By default, PCA is used. The current version also supports SPCA |
+| `cat_algorithm` | `string` | Algorithm to be used for dimensionality reduction of categorical variables. By default, MCA is used. The current version doesn’t support other algorithms |
+| `num_kwargs` | `dictionary` | Additional keyword arguments to pass to the model used for numerical variables |
+| `cat_kwargs` | `dictionary` | Additional keyword arguments to pass to the model used for categorical variables |
+
+| Attribute | Type | Description |
+|-|-|-|
+| `n_components_` | `int` | Final number of extracted components |
+| `min_explained_variance_ratio_` | `float` | Minimum explained variance ratio. By default, 0.5 |
+| `num_trans_` | `pandas.DataFrame` | Extracted components from numerical variables |
+| `cat_trans_` | `pandas.DataFrame` | Extracted components from categorical variables |
+| `num_components_` | `list` | List of names assigned to the extracted components from numerical variables |
+| `cat_components_` | `list` | List of names assigned to the extracted components from categorical variables |
+| `pca_` | `sklearn.decomposition.PCA` | PCA instance used to speed up some computations and for comparison purposes |
+
+
 
 <h3 id="user-content-module-clustering">
 7.iii. Clustering
