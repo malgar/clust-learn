@@ -2,7 +2,8 @@
 
 A Python package for extracting valuable information from large databases.
 
-* Table of contents
+## Table of contents
+- [Introduction](#introduction)
 - [[#user-content-intro][1 Introduction]]
 - [[#user-content-architecture][2 Overall architecture]]
 - [[#user-content-implementation][3 Implementation]]
@@ -16,6 +17,10 @@ A Python package for extracting valuable information from large databases.
 	- [[#user-content-module-dimensionality][7.2 Dimensionality reduction]]
 	- [[#user-content-module-clustering][7.3 Clustering]]
 	- [[#user-content-module-classifier][7.4 Classifier]]
+
+## Introduction
+
+Here the intro
 
 @@html:<a name="intro">@@
 * 1 Introduction
