@@ -77,39 +77,52 @@ Figure n shows the package layout with the functionalities covered by each modul
 The four modules are designed to be used sequentially to ensure robust and explainable results. However, each of them is independent and can be used separately to suit different use cases.
 
 
-<h2 id="user-content-module-preprocessing">
+<h3 id="user-content-module-preprocessing">
 7.1. Data preprocessing
-</h2>
+</h3>
 
 Data preprocessing consists of a set of manipulation and transformation tasks performed on the raw data before it is used for its analysis. Although data quality is essential for obtaining robust and reliable results, real-world data is often incomplete, noisy, or inconsistent. Therefore, data preprocessing is a crucial step in any analytical study.
 
-<h2 id="user-content-module-preprocessing-imputation">
+<h4 id="user-content-module-preprocessing-imputation">
 7.1.1. Data imputation
-</h2>
+</h4>
 
-<<TO-DO>>
+<h5 id="impute_missing_values">
+`impute_missing_values`
+</h5>
 
-<h2 id="user-content-module-preprocessing-outliers">
+```
+impute_missing_values(df, num_vars, cat_vars, num_pair_kws=None, mixed_pair_kws=None, cat_pair_kws=None, graph_thres=0.05, k=8, max_missing_thres=0.33)
+```
+
+This function imputes missing values following this steps:
+1. One-to-one model based imputation for strongly related variables.
+2. Cluster based hot deck imputation where clusters are obtained as the connected components of an undirected graph *G=(V,E)*, where *V* is the set of variables and *E* the pairs of variables with mutual information above a predefined threshold.
+3. Records with a proportion of missing values above a predefined threshold are discarded to ensure the quality of the hot deck imputation.
+4. Hot deck imputation for the remaining missing values considering all variables together.
+
+
+<h4 id="user-content-module-preprocessing-outliers">
 7.1.2. Outliers
-</h2>
+</h4>
 
 <<TO-DO>>
 
-<h2 id="user-content-module-dimensionality">
+<h3 id="user-content-module-dimensionality">
 7.2. Dimensionality reduction
-</h2>
+</h3>
 
 <<TO-DO>>
 
-<h2 id="user-content-module-clustering">
+<h3 id="user-content-module-clustering">
 7.3. Clustering
-</h2>
+</h3>
 
 <<TO-DO>>
 
-<h2 id="user-content-module-classifier">
+<h3 id="user-content-module-classifier">
 7.4. Classifier
-</h2>
+</h3>
 
 <<TO-DO>>
 
