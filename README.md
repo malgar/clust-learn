@@ -251,7 +251,6 @@ dr = DimensionalityReduction(df, num_vars=None, cat_vars=None, num_algorithm='pc
 | `cat_algorithm` | `string` | Algorithm to be used for dimensionality reduction of categorical variables. By default, MCA is used. The current version doesn’t support other algorithms |
 | `num_kwargs` | `dictionary` | Additional keyword arguments to pass to the model used for numerical variables |
 | `cat_kwargs` | `dictionary` | Additional keyword arguments to pass to the model used for categorical variables |
-
 | Attribute | Type | Description |
 |-|-|-|
 | `n_components_` | `int` | Final number of extracted components |
