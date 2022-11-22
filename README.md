@@ -20,19 +20,16 @@
 7. [User guide & API](#user-content-api)
 	1. [Data processing](#user-content-module-preprocessing)
 		1. [Data imputation](#user-content-module-preprocessing-imputation)
-			- [compute_missing()](#compute_missing)
-			- [missing_values_heatmap()](#missing_values_heatmap)
-			- [impute_missing_values()](#impute_missing_values)
-			- [plot_imputation_distribution_assessment()](#plot_imputation_distribution_assessment)
 		2. [Outliers](#user-content-module-preprocessing-outliers)
-			- [remove_outliers()](#remove_outliers)
 	2. [Dimensionality reduction](#user-content-module-dimensionality)
 		- [DimensionalityReduction class](#DimensionalityReduction_class)
 		- [Class methods](#DimensionalityReduction_class_methods)
 	3. [Clustering](#user-content-module-clustering)
 		- [Clustering class](#Clustering_class)
+		- [Class methods](#Clustering_class_methods)
 	4. [Classifier](#user-content-module-classifier)
 		- [Classifier class](#Classifier_class)
+		- [Class methods](#Classification_class_methods)
 8. [Citing](#user-content-citing)
 
 <h2 id="user-content-introduction">
@@ -375,6 +372,155 @@ cl = Clustering(df, algorithms='kmeans', normalize=False)
 | `optimal_config_` | `tuple` | Tuple with the optimal configuration for clustering containing the algorithm name, number of clusters, and value of the chosen validation metric |
 | `scores_` | `dict` | Pairs of algorithm name and a list of values of the chosen validation metric for a cluster range |
 
+<h4 id="Clustering_class_methods">
+Methods
+</h4>
+
+<h4>compute_clusters()</h4>
+
+[Source](https://github.com/malgar/ldbx/blob/be4a2238670af01023bd419a0f8adaa7f9cee9f6/ldbx/clustering/clustering.py#L117)
+
+```
+compute_clusters(self, n_clusters=None, metric='inertia', max_clusters=10, prefix=None, weights=None)
+```
+
+Calculates clusters.
+If more than one algorithm is passed in the class constructor, first, the optimal number of clusters
+is computed for each algorithm based on the metric passed to the method. Secondly, the algorithm that
+provides the best performance for the corresponding optimal number of clusters is selected.
+Therefore, the result shows the clusters calculated with the best performing algorithm based on the
+criteria explained above.
+
+<h4 id="describe_clusters">
+describe_clusters()
+</h4>
+
+[Source](https://github.com/malgar/ldbx/blob/be4a2238670af01023bd419a0f8adaa7f9cee9f6/ldbx/clustering/clustering.py#L182)
+
+```
+describe_clusters(self, df_ext=None, variables=None, cluster_filter=None, statistics=['mean', 'median', 'std'], output_path=None)
+```
+
+Describes clusters based on internal or external *continuous* variables.
+For categorical variables use [`describe_clusters_cat()`](#describe_clusters_cat).
+
+<h4 id="describe_clusters_cat">
+describe_clusters_cat()
+</h4>
+
+[Source](https://github.com/malgar/ldbx/blob/be4a2238670af01023bd419a0f8adaa7f9cee9f6/ldbx/clustering/clustering.py#L237)
+
+```
+describe_clusters_cat(self, cat_array, cat_name=None, order=None, normalize=False, output_path=None)
+```
+
+Describes clusters based on  external *categorical* variables. The result is a contingency table.
+For continuous variables use [`describe_clusters()`](#describe_clusters).
+
+<h4>compare_cluster_means_to_global_means()</h4>
+
+[Source](https://github.com/malgar/ldbx/blob/be4a2238670af01023bd419a0f8adaa7f9cee9f6/ldbx/clustering/clustering.py#L276)
+
+```
+compare_cluster_means_to_global_means(self, df_original=None, output_path=None)
+```
+
+For every cluster and every internal variable, the relative difference between the intra-cluster mean
+and the global mean.
+
+<h4>anova_tests()</h4>
+
+[Source](https://github.com/malgar/ldbx/blob/be4a2238670af01023bd419a0f8adaa7f9cee9f6/ldbx/clustering/clustering.py#L303)
+
+```
+anova_tests(self, df_test=None, vars_test=None, cluster_filter=None, output_path=None)
+```
+
+Runs ANOVA tests for a given set of continuous variables (internal or external) to test dependency with clusters.
+
+<h4>chi2_test()</h4>
+
+[Source](https://github.com/malgar/ldbx/blob/be4a2238670af01023bd419a0f8adaa7f9cee9f6/ldbx/clustering/clustering.py#L360)
+
+```
+chi2_test(self, cat_array)
+```
+
+Runs Chi-squared tests for a given categorical variable to test dependency with clusters.
+
+<h4>plot_score_comparison()</h4>
+
+[Source](https://github.com/malgar/ldbx/blob/be4a2238670af01023bd419a0f8adaa7f9cee9f6/ldbx/clustering/clustering.py#L379)
+
+```
+plot_score_comparison(self, output_path=None, savefig_kws=None)
+```
+
+Plots the comparison in performance between the different clustering algorithms.
+
+<h4>plot_optimal_components_normalized()</h4>
+
+[Source](https://github.com/malgar/ldbx/blob/be4a2238670af01023bd419a0f8adaa7f9cee9f6/ldbx/clustering/clustering.py#L400)
+
+```
+plot_optimal_components_normalized(self, output_path=None, savefig_kws=None)
+```
+
+Plots the normalized curve used for computing the optimal number of clusters.
+
+<h4>plot_clustercount()</h4>
+
+[Source](https://github.com/malgar/ldbx/blob/be4a2238670af01023bd419a0f8adaa7f9cee9f6/ldbx/clustering/clustering.py#L419)
+
+```
+plot_clustercount(self, output_path=None, savefig_kws=None)
+```
+
+Plots a bar plot with cluster counts.
+
+<h4>plot_cluster_means_to_global_means_comparison()</h4>
+
+[Source](https://github.com/malgar/ldbx/blob/be4a2238670af01023bd419a0f8adaa7f9cee9f6/ldbx/clustering/clustering.py#L432)
+
+```
+plot_cluster_means_to_global_means_comparison(self, df_original=None, xlabel=None, ylabel=None,
+                                              levels=[-0.50, -0.32, -0.17, -0.05, 0.05, 0.17, 0.32, 0.50],
+                                              output_path=None, savefig_kws=None)
+```
+
+Plots the normalized curve used for computing the optimal number of clusters.
+
+<h4>plot_distribution_comparison_by_cluster()</h4>
+
+[Source](https://github.com/malgar/ldbx/blob/be4a2238670af01023bd419a0f8adaa7f9cee9f6/ldbx/clustering/clustering.py#L469)
+
+```
+plot_distribution_comparison_by_cluster(self, df_ext=None, xlabel=None, ylabel=None, output_path=None, savefig_kws=None)
+```
+
+Plots the violin plots per cluster and *continuous* variables of interest to understand differences in their distributions by cluster.
+
+<h4>plot_clusters_2D()</h4>
+
+[Source](https://github.com/malgar/ldbx/blob/be4a2238670af01023bd419a0f8adaa7f9cee9f6/ldbx/clustering/clustering.py#L498)
+
+```
+plot_clusters_2D(self, coor1, coor2, style_kwargs=dict(), output_path=None, savefig_kws=None)
+```
+
+Plots two 2D plots:
+	 - A scatter plot styled by the categorical variable `hue`.
+	 - A 2D plot comparing cluster centroids and optionally the density area.
+	 
+<h4>plot_cat_distribution_by_cluster()</h4>
+
+[Source](https://github.com/malgar/ldbx/blob/be4a2238670af01023bd419a0f8adaa7f9cee9f6/ldbx/clustering/clustering.py#L545)
+
+```
+plot_cat_distribution_by_cluster(self, cat_array, cat_label=None, cluster_label=None, output_path=None, savefig_kws=None)
+```
+
+Plots the relative contingency table of the clusters with a categorical variable as a stacked bar plot.
 
 <h3 id="user-content-module-classifier">
 7.iv. Classifier
