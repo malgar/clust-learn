@@ -21,12 +21,14 @@
 	1. [Data processing](#user-content-module-preprocessing)
 		1. [Data imputation](#user-content-module-preprocessing-imputation)
 			- [compute_missing()](#compute_missing)
-			- [impute_missing_values()](#impute_missing_values)
 			- [missing_values_heatmap()](#missing_values_heatmap)
+			- [impute_missing_values()](#impute_missing_values)
+			- [plot_imputation_distribution_assessment()](#plot_imputation_distribution_assessment)
 		2. [Outliers](#user-content-module-preprocessing-outliers)
 			- [remove_outliers()](#remove_outliers)
 	2. [Dimensionality reduction](#user-content-module-dimensionality)
 		- [DimensionalityReduction class](#DimensionalityReduction_class)
+		- [Class methods](#DimensionalityReduction_class_methods)
 	3. [Clustering](#user-content-module-clustering)
 		- [Clustering class](#Clustering_class)
 	4. [Classifier](#user-content-module-classifier)
@@ -75,10 +77,10 @@
 
 `ldbx` is organized into four modules:
 
-	1. Data preprocessing
-	2. Dimensionality reduction
-	3. Clustering
-	4. Classifier
+1. Data preprocessing
+2. Dimensionality reduction
+3. Clustering
+4. Classifier
 
 Figure n shows the package layout with the functionalities covered by each module along with the techniques used, the explainability strategies available, and the main functions and class methods encapsulating these techniques and explainability strategies.
 
@@ -114,6 +116,25 @@ Calculates the pct/count of missing values per column.
 
 - `missing_df` : `pandas.DataFrame`
 	- DataFrame with the pct/counts of missing values per column.
+	
+<h4 id="missing_values_heatmap">
+missing_values_heatmap()
+</h4>
+
+```
+missing_values_heatmap(df, output_path=None, savefig_kws=None)
+```
+
+Plots a heatmap to visualize missing values (light color).
+
+**Parameters**
+
+- `df` : `pandas.DataFrame`
+   - DataFrame containing the data.
+- `output_path` : `str`, default=`None`
+   - Path to save figure as image.
+- `savefig_kws` : `dict`, default=`None`
+   - Save figure options.
 
 <h4 id="impute_missing_values">
 impute_missing_values()
@@ -153,25 +174,6 @@ This function imputes missing values following this steps:
 
 - `final_pairs` : `pandas.DataFrame`
 	- DataFrame with pairs of highly correlated variables (`var1`: variable with values to impute; `var2`: variable to be used as independent variable for model-based imputation), together proportion of missing values of variables `var1` and `var2`.
-
-<h4 id="missing_values_heatmap">
-missing_values_heatmap()
-</h4>
-
-```
-missing_values_heatmap(df, output_path=None, savefig_kws=None)
-```
-
-Plots a heatmap to visualize missing values (light color).
-
-**Parameters**
-
-- `df` : `pandas.DataFrame`
-   - DataFrame containing the data.
-- `output_path` : `str`, default=`None`
-   - Path to save figure as image.
-- `savefig_kws` : `dict`, default=`None`
-   - Save figure options.
    
 <h4 id="plot_imputation_distribution_assessment">
 plot_imputation_distribution_assessment()
@@ -263,7 +265,21 @@ dr = DimensionalityReduction(df, num_vars=None, cat_vars=None, num_algorithm='pc
 | `cat_components_` | `list` | List of names assigned to the extracted components from categorical variables |
 | `pca_` | `sklearn.decomposition.PCA` | PCA instance used to speed up some computations and for comparison purposes |
 
+<h4 id="DimensionalityReduction_class_methods">
+Methods
+</h4>
 
+<h4 id="DimensionalityReduction_class_methods">
+transform()
+</h4>
+
+[Source](https://github.com/malgar/ldbx/blob/aa05a7cadea207057dc1b6dc6060d4aa505d744f/ldbx/dimensionality_reduction/dimensionality_reduction.py#L79)
+
+```
+transform(self, n_components=None, min_explained_variance_ratio=0.5)
+```
+
+Transforms a DataFrame df to a lower dimensional space.
 
 <h3 id="user-content-module-clustering">
 7.iii. Clustering
