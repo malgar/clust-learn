@@ -552,6 +552,119 @@ classifier = Classifier(df, predictor_cols, target, num_cols=None, cat_cols=None
 | y_test_ | numpy.array | Test split of target |
 | grid_result_ | sklearn.model_selection.GridSearchCV | Instance of fitted estimator for hyperparameter tuning |
 
+<h4 id="Classifier_class_methods">
+Methods
+</h4>
+
+<h4>train_model()</h4>
+
+[Source](https://github.com/malgar/ldbx/blob/5826ef273eb876c961eab7fa4eacb31caff25ef0/ldbx/classifier/classifier.py#L52)
+
+```
+train_model(self, model=None, feature_selection=True, features_to_keep=[],
+			feature_selection_model=None, hyperparameter_tuning=False, param_grid=None,
+			train_size=0.8)
+```
+
+This method trains a classification model.
+
+By default, it uses XGBoost, but any other estimator (instance of `scikit-learn.Estimator`) can be used.
+
+The building process consists of three main steps:
+ - Feature Selection (optional)
+ 
+Feature removing highly correlated variables using a classification model and SHAP values
+to determine which to keep, and Recursive Feature Elimination with Cross-Validation (RFECV)
+on the remaining features.
+
+ - Hyperparameter tuning (optional)
+ 
+Runs grid search with cross-validation for hyperparameter tuning. **Note** the parameter grid
+must be passed.
+
+ - Model training
+ 
+Trains a classification model with the selected features and hyperparameters. By default, an XGBoost
+classifier will be trained.
+   
+**Note** both hyperparameter tuning and model training are run on a train set. Train-test split is performed
+using `sklearn.model_selection.train_test_split`.
+
+<h4>hyperparameter_tuning_metrics()</h4>
+
+[Source](https://github.com/malgar/ldbx/blob/5826ef273eb876c961eab7fa4eacb31caff25ef0/ldbx/classifier/classifier.py#L134)
+
+```
+hyperparameter_tuning_metrics(self, output_path=None)
+```
+
+This method returns the average and standard deviation of the cross-validation runs for every hyperparameter
+combination in hyperparameter tuning.
+
+<h4>confusion_matrix()</h4>
+
+[Source](https://github.com/malgar/ldbx/blob/5826ef273eb876c961eab7fa4eacb31caff25ef0/ldbx/classifier/classifier.py#L154)
+
+```
+confusion_matrix(self, test=True, sum_stats=True, output_path=None)
+```
+
+This method returns the confusion matrix of the classification model.
+
+<h4>classification_report()</h4>
+
+[Source](https://github.com/malgar/ldbx/blob/5826ef273eb876c961eab7fa4eacb31caff25ef0/ldbx/classifier/classifier.py#L195)
+
+```
+classification_report(self, test=True, output_path=None)
+```
+
+This method returns the `sklearn.metrics.classification_report` in `pandas.DataFrame` format.
+
+This report contains the intra-class metrics precision, recall and F1-score, together with the global accuracy,
+and macro average and weighted average of the three intra-class metrics.
+
+<h4>plot_shap_importances()</h4>
+
+[Source](https://github.com/malgar/ldbx/blob/5826ef273eb876c961eab7fa4eacb31caff25ef0/ldbx/classifier/classifier.py#L225)
+
+```
+plot_shap_importances(self, n_top=7, output_path=None, savefig_kws=None)
+```
+
+Plots shap importance values, calculated as the combined average of the absolute values of the shap values
+for all classes.
+
+<h4>plot_shap_importances_beeswarm()</h4>
+
+[Source](https://github.com/malgar/ldbx/blob/5826ef273eb876c961eab7fa4eacb31caff25ef0/ldbx/classifier/classifier.py#L241)
+
+```
+plot_shap_importances_beeswarm(self, class_id, n_top=10, output_path=None, savefig_kws=None)
+```
+
+Plots a summary of shap values for a specific class of the target variable. This uses [shap beeswarm plot](https://shap.readthedocs.io/en/latest/example_notebooks/api_examples/plots/beeswarm.html).
+
+<h4>plot_confusion_matrix()</h4>
+
+[Source](https://github.com/malgar/ldbx/blob/5826ef273eb876c961eab7fa4eacb31caff25ef0/ldbx/classifier/classifier.py#L260)
+
+```
+plot_confusion_matrix(self, test=True, sum_stats=True, output_path=None, savefig_kws=None)
+```
+
+This function makes a pretty plot of an sklearn Confusion Matrix cf using a Seaborn heatmap visualization.
+
+<h4>plot_roc_curves()</h4>
+
+[Source](https://github.com/malgar/ldbx/blob/5826ef273eb876c961eab7fa4eacb31caff25ef0/ldbx/classifier/classifier.py#L280)
+
+```
+ plot_roc_curves(self, test=True, output_path=None, savefig_kws=None)
+```
+
+Plots ROC curve for every class.
+
 <h2 id="user-content-citing">
 8. Citing
 </h2>
