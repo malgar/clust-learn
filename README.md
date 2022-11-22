@@ -29,7 +29,7 @@
 		- [Class methods](#Clustering_class_methods)
 	4. [Classifier](#user-content-module-classifier)
 		- [Classifier class](#Classifier_class)
-		- [Class methods](#Classification_class_methods)
+		- [Class methods](#Classifier_class_methods)
 8. [Citing](#user-content-citing)
 
 <h2 id="user-content-introduction">
