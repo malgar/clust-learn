@@ -36,13 +36,26 @@
 1. Introduction
 </h2>
 
-<<TO-DO>>
+`ldbx` enables users to run end-to-end explainable cluster analysis to extract information from large and high-dimensional
+mixed-type data, and it does so by providing a framework that guides the user through data preprocessing, dimensionality reduction, 
+clustering, and classification of the obtained clusters. It is designed to require very few lines of code, and with a very strong
+focus on explainability.
 
 <h2 id="user-content-architecture">
 2. Overall architecture
 </h2>
 
-<<TO-DO>>
+`ldbx` is organized into four modules, one for each component of the methodological framework presented [here](#user-content-citing): 
+* [data_preprocessing](https://github.com/malgar/ldbx/tree/master/ldbx/data_processing)
+* [dimensionality_reduction](https://github.com/malgar/ldbx/tree/master/ldbx/dimensionality_reduction)
+* [clustering](https://github.com/malgar/ldbx/tree/master/ldbx/clustering)
+* [classifier](https://github.com/malgar/ldbx/tree/master/ldbx/classifier)
+
+Figue 1 shows the package layout with the functionalities covered by each module along with the techniques used, the
+explainability strategies available, and the main functions and class methods encapsulating these techniques and
+explainability strategies.
+
+[[[FIGURE HERE]]]
 
 <h2 id="user-content-implementation">
 3. Implementation
