@@ -14,7 +14,7 @@
 1. [Introduction](#user-content-introduction)
 2. [Overall architecture](#user-content-architecture)
 3. [Implementation](#user-content-implementation)
-4. [Installation and configuration](#user-content-install)
+4. [Installation](#user-content-install)
 5. [Version and license information](#user-content-license)
 6. [Bug reports and future work](#user-content-future)
 7. [User guide & API](#user-content-api)
@@ -38,7 +38,7 @@
 
 `ldbx` enables users to run end-to-end explainable cluster analysis to extract information from large and high-dimensional
 mixed-type data, and it does so by providing a framework that guides the user through data preprocessing, dimensionality reduction, 
-clustering, and classification of the obtained clusters. It is designed to require very few lines of code, and with a very strong
+clustering, and classification of the obtained clusters. It is designed to require very few lines of code, and with a strong
 focus on explainability.
 
 <h2 id="user-content-architecture">
@@ -51,7 +51,7 @@ focus on explainability.
 * [clustering](https://github.com/malgar/ldbx/tree/master/ldbx/clustering)
 * [classifier](https://github.com/malgar/ldbx/tree/master/ldbx/classifier)
 
-Figue 1 shows the package layout with the functionalities covered by each module along with the techniques used, the
+**Figue 1** shows the package layout with the functionalities covered by each module along with the techniques used, the
 explainability strategies available, and the main functions and class methods encapsulating these techniques and
 explainability strategies.
 
@@ -61,25 +61,34 @@ explainability strategies.
 3. Implementation
 </h2>
 
-<<TO-DO>>
+The package is implemented with Python 3.9 using open source libraries. It relies heavily on [pandas](https://pandas.pydata.org/) and
+[scikit-learn](https://scikit-learn.org/stable/). Read the complete list of requirements [here](https://github.com/malgar/ldbx/blob/master/requirements.txt).
+
+It can be installed manually or from pip/PyPI (see Section [4. Installation](#user-content-install)).
 
 <h2 id="user-content-install">
-4. Installation and configuration
+4. Installation
 </h2>
 
-<<TO-DO>>
+The package is on [PyPI](link). Simply run:
+
+```
+pip install ldbx
+```
 
 <h2 id="user-content-license">
 5. Version and license information
 </h2>
 
-<<TO-DO>>
+* Version: 1.0
+* Author: Miguel Alvarez (@gmail.com)
+* Copyright: 
 
 <h2 id="user-content-future">
 6. Bug reports and future work
 </h2>
 
-<<TO-DO>>
+Please report bugs and feature requests through creating a new issue [here](https://github.com/malgar/ldbx/issues).
 
 <h2 id="user-content-api">
 7. User guide & API
