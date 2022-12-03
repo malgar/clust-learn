@@ -1,4 +1,4 @@
-"""Data processing"""
+"""Data preprocessing"""
 # Author: Miguel Alvarez
 
 import networkx as nx
