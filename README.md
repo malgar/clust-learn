@@ -42,7 +42,7 @@
 1. Introduction
 </h2>
 
-`ldbx` enables users to run end-to-end explainable cluster analysis to extract information from large and high-dimensional
+`clust-learn` enables users to run end-to-end explainable cluster analysis to extract information from large and high-dimensional
 mixed-type data, and it does so by providing a framework that guides the user through data preprocessing, dimensionality reduction, 
 clustering, and classification of the obtained clusters. It is designed to require very few lines of code, and with a strong
 focus on explainability.
@@ -51,24 +51,30 @@ focus on explainability.
 2. Overall architecture
 </h2>
 
-`ldbx` is organized into four modules, one for each component of the methodological framework presented [here](#user-content-citing): 
-* [data_preprocessing](https://github.com/malgar/ldbx/tree/master/ldbx/data_processing)
-* [dimensionality_reduction](https://github.com/malgar/ldbx/tree/master/ldbx/dimensionality_reduction)
-* [clustering](https://github.com/malgar/ldbx/tree/master/ldbx/clustering)
-* [classifier](https://github.com/malgar/ldbx/tree/master/ldbx/classifier)
+`clust-learn` is organized into four modules, one for each component of the methodological framework presented [here](#user-content-citing): 
+* [data_preprocessing](https://github.com/malgar/clust-learn/tree/master/clearn/data_preprocessing)
+* [dimensionality_reduction](https://github.com/malgar/clust-learn/tree/master/clearn/dimensionality_reduction)
+* [clustering](https://github.com/malgar/clust-learn/tree/master/clearn/clustering)
+* [classifier](https://github.com/malgar/clust-learn/tree/master/clearn/classifier)
 
 **Figue 1** shows the package layout with the functionalities covered by each module along with the techniques used, the
 explainability strategies available, and the main functions and class methods encapsulating these techniques and
 explainability strategies.
 
-[[[FIGURE HERE]]]
+<br/>
+
+<div align="center">
+  <img src="images/visualizations.png" alt="clust-learn visualizations"/>
+</div>
+
+<br/>
 
 <h2 id="user-content-implementation">
 3. Implementation
 </h2>
 
 The package is implemented with Python 3.9 using open source libraries. It relies heavily on [pandas](https://pandas.pydata.org/) and
-[scikit-learn](https://scikit-learn.org/stable/). Read the complete list of requirements [here](https://github.com/malgar/ldbx/blob/master/requirements.txt).
+[scikit-learn](https://scikit-learn.org/stable/). Read the complete list of requirements [here](https://github.com/malgar/clust-learn/blob/master/requirements.txt).
 
 It can be installed manually or from pip/PyPI (see Section [4. Installation](#user-content-install)).
 
@@ -76,10 +82,10 @@ It can be installed manually or from pip/PyPI (see Section [4. Installation](#us
 4. Installation
 </h2>
 
-The package is on [PyPI](link). Simply run:
+The package is on [PyPI]([!!link]). Simply run:
 
 ```
-pip install ldbx
+pip install clust-learn
 ```
 
 <h2 id="user-content-license">
@@ -88,26 +94,26 @@ pip install ldbx
 
 * Version: 1.0
 * Author: Miguel Alvarez (@gmail.com)
-* Copyright: 
+* License: GPLv3 
 
 <h2 id="user-content-future">
 6. Bug reports and future work
 </h2>
 
-Please report bugs and feature requests through creating a new issue [here](https://github.com/malgar/ldbx/issues).
+Please report bugs and feature requests through creating a new issue [here](https://github.com/malgar/clust-learn/issues).
 
 <h2 id="user-content-api">
 7. User guide & API
 </h2>
 
-`ldbx` is organized into four modules:
+`clust-learn` is organized into four modules:
 
 1. Data preprocessing
 2. Dimensionality reduction
 3. Clustering
 4. Classifier
 
-Figure n shows the package layout with the functionalities covered by each module along with the techniques used, the explainability strategies available, and the main functions and class methods encapsulating these techniques and explainability strategies.
+**Figue 1** shows the package layout with the functionalities covered by each module along with the techniques used, the explainability strategies available, and the main functions and class methods encapsulating these techniques and explainability strategies.
 
 The four modules are designed to be used sequentially to ensure robust and explainable results. However, each of them is independent and can be used separately to suit different use cases.
 
@@ -296,7 +302,7 @@ Methods
 
 <h4>transform()</h4>
 
-[Source](https://github.com/malgar/ldbx/blob/aa05a7cadea207057dc1b6dc6060d4aa505d744f/ldbx/dimensionality_reduction/dimensionality_reduction.py#L79)
+[Source](https://github.com/malgar/clust-learn/blob/aa05a7cadea207057dc1b6dc6060d4aa505d744f/clearn/dimensionality_reduction/dimensionality_reduction.py#L79)
 
 ```
 transform(self, n_components=None, min_explained_variance_ratio=0.5)
@@ -306,7 +312,7 @@ Transforms a DataFrame df to a lower dimensional space.
 
 <h4>num_main_contributors(()</h4>
 
-[Source](https://github.com/malgar/ldbx/blob/aa05a7cadea207057dc1b6dc6060d4aa505d744f/ldbx/dimensionality_reduction/dimensionality_reduction.py#L191)
+[Source](https://github.com/malgar/clust-learn/blob/aa05a7cadea207057dc1b6dc6060d4aa505d744f/clearn/dimensionality_reduction/dimensionality_reduction.py#L191)
 
 ```
 num_main_contributors(self, thres=0.5, n_contributors=None, dim_idx=None, component_description=None, col_description=None, output_path=None)
@@ -316,7 +322,7 @@ Computes the original numerical variables with the strongest relation to the der
 
 <h4>cat_main_contributors(()</h4>
 
-[Source](https://github.com/malgar/ldbx/blob/aa05a7cadea207057dc1b6dc6060d4aa505d744f/ldbx/dimensionality_reduction/dimensionality_reduction.py#L225)
+[Source](https://github.com/malgar/clust-learn/blob/aa05a7cadea207057dc1b6dc6060d4aa505d744f/clearn/dimensionality_reduction/dimensionality_reduction.py#L225)
 
 ```
 cat_main_contributors(self, thres=0.14, n_contributors=None, dim_idx=None, component_description=None, col_description=None, output_path=None)
@@ -326,7 +332,7 @@ Computes the original categorical variables with the strongest relation to the d
 
 <h4>cat_main_contributors_stats()</h4>
 
-[Source](https://github.com/malgar/ldbx/blob/aa05a7cadea207057dc1b6dc6060d4aa505d744f/ldbx/dimensionality_reduction/dimensionality_reduction.py#L259)
+[Source](https://github.com/malgar/clust-learn/blob/aa05a7cadea207057dc1b6dc6060d4aa505d744f/clearn/dimensionality_reduction/dimensionality_reduction.py#L259)
 
 ```
 cat_main_contributors_stats(self, thres=0.14, n_contributors=None, dim_idx=None, output_path=None)
@@ -336,7 +342,7 @@ Computes for every categorical variable's value, the mean and std of the derived
 
 <h4>plot_num_explained_variance()</h4>
 
-[Source](https://github.com/malgar/ldbx/blob/aa05a7cadea207057dc1b6dc6060d4aa505d744f/ldbx/dimensionality_reduction/dimensionality_reduction.py#L286)
+[Source](https://github.com/malgar/clust-learn/blob/aa05a7cadea207057dc1b6dc6060d4aa505d744f/clearn/dimensionality_reduction/dimensionality_reduction.py#L286)
 
 ```
 plot_num_explained_variance(self, thres=0.5, plots='all', output_path=None, savefig_kws=None)
@@ -346,7 +352,7 @@ Plot the explained variance (ratio, cumulative, and/or normalized) for numerical
 
 <h4>plot_cat_explained_variance()</h4>
 
-[Source](https://github.com/malgar/ldbx/blob/aa05a7cadea207057dc1b6dc6060d4aa505d744f/ldbx/dimensionality_reduction/dimensionality_reduction.py#L303)
+[Source](https://github.com/malgar/clust-learn/blob/aa05a7cadea207057dc1b6dc6060d4aa505d744f/clearn/dimensionality_reduction/dimensionality_reduction.py#L303)
 
 ```
 plot_cat_explained_variance(self, thres=0.5, plots='all', output_path=None, savefig_kws=None)
@@ -356,7 +362,7 @@ Plot the explained variance (ratio, cumulative, and/or normalized) for categoric
 
 <h4>plot_num_main_contributors()</h4>
 
-[Source](https://github.com/malgar/ldbx/blob/aa05a7cadea207057dc1b6dc6060d4aa505d744f/ldbx/dimensionality_reduction/dimensionality_reduction.py#L321)
+[Source](https://github.com/malgar/clust-learn/blob/aa05a7cadea207057dc1b6dc6060d4aa505d744f/clearn/dimensionality_reduction/dimensionality_reduction.py#L321)
 
 ```
 plot_num_main_contributors(self, thres=0.5, n_contributors=5, dim_idx=None, output_path=None, savefig_kws=None)
@@ -366,7 +372,7 @@ Plot main contributors (original variables with the strongest relation with deri
 
 <h4>plot_cat_main_contributor_distribution()</h4>
 
-[Source](https://github.com/malgar/ldbx/blob/aa05a7cadea207057dc1b6dc6060d4aa505d744f/ldbx/dimensionality_reduction/dimensionality_reduction.py#L344)
+[Source](https://github.com/malgar/clust-learn/blob/aa05a7cadea207057dc1b6dc6060d4aa505d744f/clearn/dimensionality_reduction/dimensionality_reduction.py#L344)
 
 ```
 plot_cat_main_contributor_distribution(self, thres=0.14, n_contributors=None, dim_idx=None, output_path=None, savefig_kws=None)
@@ -406,7 +412,7 @@ Methods
 
 <h4>compute_clusters()</h4>
 
-[Source](https://github.com/malgar/ldbx/blob/be4a2238670af01023bd419a0f8adaa7f9cee9f6/ldbx/clustering/clustering.py#L117)
+[Source](https://github.com/malgar/clust-learn/blob/be4a2238670af01023bd419a0f8adaa7f9cee9f6/clearn/clustering/clustering.py#L117)
 
 ```
 compute_clusters(self, n_clusters=None, metric='inertia', max_clusters=10, prefix=None, weights=None)
@@ -423,7 +429,7 @@ criteria explained above.
 describe_clusters()
 </h4>
 
-[Source](https://github.com/malgar/ldbx/blob/be4a2238670af01023bd419a0f8adaa7f9cee9f6/ldbx/clustering/clustering.py#L182)
+[Source](https://github.com/malgar/clust-learn/blob/be4a2238670af01023bd419a0f8adaa7f9cee9f6/clearn/clustering/clustering.py#L182)
 
 ```
 describe_clusters(self, df_ext=None, variables=None, cluster_filter=None, statistics=['mean', 'median', 'std'], output_path=None)
@@ -436,7 +442,7 @@ For categorical variables use [`describe_clusters_cat()`](#describe_clusters_cat
 describe_clusters_cat()
 </h4>
 
-[Source](https://github.com/malgar/ldbx/blob/be4a2238670af01023bd419a0f8adaa7f9cee9f6/ldbx/clustering/clustering.py#L237)
+[Source](https://github.com/malgar/clust-learn/blob/be4a2238670af01023bd419a0f8adaa7f9cee9f6/clearn/clustering/clustering.py#L237)
 
 ```
 describe_clusters_cat(self, cat_array, cat_name=None, order=None, normalize=False, output_path=None)
@@ -447,7 +453,7 @@ For continuous variables use [`describe_clusters()`](#describe_clusters).
 
 <h4>compare_cluster_means_to_global_means()</h4>
 
-[Source](https://github.com/malgar/ldbx/blob/be4a2238670af01023bd419a0f8adaa7f9cee9f6/ldbx/clustering/clustering.py#L276)
+[Source](https://github.com/malgar/clust-learn/blob/be4a2238670af01023bd419a0f8adaa7f9cee9f6/clearn/clustering/clustering.py#L276)
 
 ```
 compare_cluster_means_to_global_means(self, df_original=None, output_path=None)
@@ -458,7 +464,7 @@ and the global mean.
 
 <h4>anova_tests()</h4>
 
-[Source](https://github.com/malgar/ldbx/blob/be4a2238670af01023bd419a0f8adaa7f9cee9f6/ldbx/clustering/clustering.py#L303)
+[Source](https://github.com/malgar/clust-learn/blob/be4a2238670af01023bd419a0f8adaa7f9cee9f6/clearn/clustering/clustering.py#L303)
 
 ```
 anova_tests(self, df_test=None, vars_test=None, cluster_filter=None, output_path=None)
@@ -468,7 +474,7 @@ Runs ANOVA tests for a given set of continuous variables (internal or external) 
 
 <h4>chi2_test()</h4>
 
-[Source](https://github.com/malgar/ldbx/blob/be4a2238670af01023bd419a0f8adaa7f9cee9f6/ldbx/clustering/clustering.py#L360)
+[Source](https://github.com/malgar/clust-learn/blob/be4a2238670af01023bd419a0f8adaa7f9cee9f6/clearn/clustering/clustering.py#L360)
 
 ```
 chi2_test(self, cat_array)
@@ -478,7 +484,7 @@ Runs Chi-squared tests for a given categorical variable to test dependency with 
 
 <h4>plot_score_comparison()</h4>
 
-[Source](https://github.com/malgar/ldbx/blob/be4a2238670af01023bd419a0f8adaa7f9cee9f6/ldbx/clustering/clustering.py#L379)
+[Source](https://github.com/malgar/clust-learn/blob/be4a2238670af01023bd419a0f8adaa7f9cee9f6/clearn/clustering/clustering.py#L379)
 
 ```
 plot_score_comparison(self, output_path=None, savefig_kws=None)
@@ -488,7 +494,7 @@ Plots the comparison in performance between the different clustering algorithms.
 
 <h4>plot_optimal_components_normalized()</h4>
 
-[Source](https://github.com/malgar/ldbx/blob/be4a2238670af01023bd419a0f8adaa7f9cee9f6/ldbx/clustering/clustering.py#L400)
+[Source](https://github.com/malgar/clust-learn/blob/be4a2238670af01023bd419a0f8adaa7f9cee9f6/clearn/clustering/clustering.py#L400)
 
 ```
 plot_optimal_components_normalized(self, output_path=None, savefig_kws=None)
@@ -498,7 +504,7 @@ Plots the normalized curve used for computing the optimal number of clusters.
 
 <h4>plot_clustercount()</h4>
 
-[Source](https://github.com/malgar/ldbx/blob/be4a2238670af01023bd419a0f8adaa7f9cee9f6/ldbx/clustering/clustering.py#L419)
+[Source](https://github.com/malgar/clust-learn/blob/be4a2238670af01023bd419a0f8adaa7f9cee9f6/clearn/clustering/clustering.py#L419)
 
 ```
 plot_clustercount(self, output_path=None, savefig_kws=None)
@@ -508,7 +514,7 @@ Plots a bar plot with cluster counts.
 
 <h4>plot_cluster_means_to_global_means_comparison()</h4>
 
-[Source](https://github.com/malgar/ldbx/blob/be4a2238670af01023bd419a0f8adaa7f9cee9f6/ldbx/clustering/clustering.py#L432)
+[Source](https://github.com/malgar/clust-learn/blob/be4a2238670af01023bd419a0f8adaa7f9cee9f6/clearn/clustering/clustering.py#L432)
 
 ```
 plot_cluster_means_to_global_means_comparison(self, df_original=None, xlabel=None, ylabel=None,
@@ -520,7 +526,7 @@ Plots the normalized curve used for computing the optimal number of clusters.
 
 <h4>plot_distribution_comparison_by_cluster()</h4>
 
-[Source](https://github.com/malgar/ldbx/blob/be4a2238670af01023bd419a0f8adaa7f9cee9f6/ldbx/clustering/clustering.py#L469)
+[Source](https://github.com/malgar/clust-learn/blob/be4a2238670af01023bd419a0f8adaa7f9cee9f6/clearn/clustering/clustering.py#L469)
 
 ```
 plot_distribution_comparison_by_cluster(self, df_ext=None, xlabel=None, ylabel=None, output_path=None, savefig_kws=None)
@@ -530,7 +536,7 @@ Plots the violin plots per cluster and *continuous* variables of interest to und
 
 <h4>plot_clusters_2D()</h4>
 
-[Source](https://github.com/malgar/ldbx/blob/be4a2238670af01023bd419a0f8adaa7f9cee9f6/ldbx/clustering/clustering.py#L498)
+[Source](https://github.com/malgar/clust-learn/blob/be4a2238670af01023bd419a0f8adaa7f9cee9f6/clearn/clustering/clustering.py#L498)
 
 ```
 plot_clusters_2D(self, coor1, coor2, style_kwargs=dict(), output_path=None, savefig_kws=None)
@@ -542,7 +548,7 @@ Plots two 2D plots:
 	 
 <h4>plot_cat_distribution_by_cluster()</h4>
 
-[Source](https://github.com/malgar/ldbx/blob/be4a2238670af01023bd419a0f8adaa7f9cee9f6/ldbx/clustering/clustering.py#L545)
+[Source](https://github.com/malgar/clust-learn/blob/be4a2238670af01023bd419a0f8adaa7f9cee9f6/clearn/clustering/clustering.py#L545)
 
 ```
 plot_cat_distribution_by_cluster(self, cat_array, cat_label=None, cluster_label=None, output_path=None, savefig_kws=None)
@@ -586,7 +592,7 @@ Methods
 
 <h4>train_model()</h4>
 
-[Source](https://github.com/malgar/ldbx/blob/5826ef273eb876c961eab7fa4eacb31caff25ef0/ldbx/classifier/classifier.py#L52)
+[Source](https://github.com/malgar/clust-learn/blob/5826ef273eb876c961eab7fa4eacb31caff25ef0/clearn/classifier/classifier.py#L52)
 
 ```
 train_model(self, model=None, feature_selection=True, features_to_keep=[],
@@ -620,7 +626,7 @@ using `sklearn.model_selection.train_test_split`.
 
 <h4>hyperparameter_tuning_metrics()</h4>
 
-[Source](https://github.com/malgar/ldbx/blob/5826ef273eb876c961eab7fa4eacb31caff25ef0/ldbx/classifier/classifier.py#L134)
+[Source](https://github.com/malgar/clust-learn/blob/5826ef273eb876c961eab7fa4eacb31caff25ef0/clearn/classifier/classifier.py#L134)
 
 ```
 hyperparameter_tuning_metrics(self, output_path=None)
@@ -631,7 +637,7 @@ combination in hyperparameter tuning.
 
 <h4>confusion_matrix()</h4>
 
-[Source](https://github.com/malgar/ldbx/blob/5826ef273eb876c961eab7fa4eacb31caff25ef0/ldbx/classifier/classifier.py#L154)
+[Source](https://github.com/malgar/clust-learn/blob/5826ef273eb876c961eab7fa4eacb31caff25ef0/clearn/classifier/classifier.py#L154)
 
 ```
 confusion_matrix(self, test=True, sum_stats=True, output_path=None)
@@ -641,7 +647,7 @@ This method returns the confusion matrix of the classification model.
 
 <h4>classification_report()</h4>
 
-[Source](https://github.com/malgar/ldbx/blob/5826ef273eb876c961eab7fa4eacb31caff25ef0/ldbx/classifier/classifier.py#L195)
+[Source](https://github.com/malgar/clust-learn/blob/5826ef273eb876c961eab7fa4eacb31caff25ef0/clearn/classifier/classifier.py#L195)
 
 ```
 classification_report(self, test=True, output_path=None)
@@ -654,7 +660,7 @@ and macro average and weighted average of the three intra-class metrics.
 
 <h4>plot_shap_importances()</h4>
 
-[Source](https://github.com/malgar/ldbx/blob/5826ef273eb876c961eab7fa4eacb31caff25ef0/ldbx/classifier/classifier.py#L225)
+[Source](https://github.com/malgar/clust-learn/blob/5826ef273eb876c961eab7fa4eacb31caff25ef0/clearn/classifier/classifier.py#L225)
 
 ```
 plot_shap_importances(self, n_top=7, output_path=None, savefig_kws=None)
@@ -665,7 +671,7 @@ for all classes.
 
 <h4>plot_shap_importances_beeswarm()</h4>
 
-[Source](https://github.com/malgar/ldbx/blob/5826ef273eb876c961eab7fa4eacb31caff25ef0/ldbx/classifier/classifier.py#L241)
+[Source](https://github.com/malgar/clust-learn/blob/5826ef273eb876c961eab7fa4eacb31caff25ef0/clearn/classifier/classifier.py#L241)
 
 ```
 plot_shap_importances_beeswarm(self, class_id, n_top=10, output_path=None, savefig_kws=None)
@@ -675,7 +681,7 @@ Plots a summary of shap values for a specific class of the target variable. This
 
 <h4>plot_confusion_matrix()</h4>
 
-[Source](https://github.com/malgar/ldbx/blob/5826ef273eb876c961eab7fa4eacb31caff25ef0/ldbx/classifier/classifier.py#L260)
+[Source](https://github.com/malgar/clust-learn/blob/5826ef273eb876c961eab7fa4eacb31caff25ef0/clearn/classifier/classifier.py#L260)
 
 ```
 plot_confusion_matrix(self, test=True, sum_stats=True, output_path=None, savefig_kws=None)
@@ -685,7 +691,7 @@ This function makes a pretty plot of an sklearn Confusion Matrix cf using a Seab
 
 <h4>plot_roc_curves()</h4>
 
-[Source](https://github.com/malgar/ldbx/blob/5826ef273eb876c961eab7fa4eacb31caff25ef0/ldbx/classifier/classifier.py#L280)
+[Source](https://github.com/malgar/clust-learn/blob/5826ef273eb876c961eab7fa4eacb31caff25ef0/clearn/classifier/classifier.py#L280)
 
 ```
  plot_roc_curves(self, test=True, output_path=None, savefig_kws=None)
