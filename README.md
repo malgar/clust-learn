@@ -64,7 +64,7 @@ explainability strategies.
 <br/>
 
 <div align="center">
-  <img src="images/visualizations.png" alt="clust-learn visualizations"/>
+  <img src="images/package_structure.png" alt="clust-learn package structure"/>
 </div>
 
 <br/>
@@ -302,7 +302,7 @@ Methods
 
 <h4>transform()</h4>
 
-[Source](https://github.com/malgar/clust-learn/blob/aa05a7cadea207057dc1b6dc6060d4aa505d744f/clearn/dimensionality_reduction/dimensionality_reduction.py#L79)
+[Source](https://github.com/malgar/clust-learn/blob/f0744a15823c2b7c6b49c278d08d708d05df952a/clearn/dimensionality_reduction/dimensionality_reduction.py#L79)
 
 ```
 transform(self, n_components=None, min_explained_variance_ratio=0.5)
@@ -312,7 +312,7 @@ Transforms a DataFrame df to a lower dimensional space.
 
 <h4>num_main_contributors(()</h4>
 
-[Source](https://github.com/malgar/clust-learn/blob/aa05a7cadea207057dc1b6dc6060d4aa505d744f/clearn/dimensionality_reduction/dimensionality_reduction.py#L191)
+[Source](https://github.com/malgar/clust-learn/blob/f0744a15823c2b7c6b49c278d08d708d05df952a/clearn/dimensionality_reduction/dimensionality_reduction.py#L191)
 
 ```
 num_main_contributors(self, thres=0.5, n_contributors=None, dim_idx=None, component_description=None, col_description=None, output_path=None)
@@ -322,7 +322,7 @@ Computes the original numerical variables with the strongest relation to the der
 
 <h4>cat_main_contributors(()</h4>
 
-[Source](https://github.com/malgar/clust-learn/blob/aa05a7cadea207057dc1b6dc6060d4aa505d744f/clearn/dimensionality_reduction/dimensionality_reduction.py#L225)
+[Source](https://github.com/malgar/clust-learn/blob/f0744a15823c2b7c6b49c278d08d708d05df952a/clearn/dimensionality_reduction/dimensionality_reduction.py#L225)
 
 ```
 cat_main_contributors(self, thres=0.14, n_contributors=None, dim_idx=None, component_description=None, col_description=None, output_path=None)
@@ -332,7 +332,7 @@ Computes the original categorical variables with the strongest relation to the d
 
 <h4>cat_main_contributors_stats()</h4>
 
-[Source](https://github.com/malgar/clust-learn/blob/aa05a7cadea207057dc1b6dc6060d4aa505d744f/clearn/dimensionality_reduction/dimensionality_reduction.py#L259)
+[Source](https://github.com/malgar/clust-learn/blob/f0744a15823c2b7c6b49c278d08d708d05df952a/clearn/dimensionality_reduction/dimensionality_reduction.py#L259)
 
 ```
 cat_main_contributors_stats(self, thres=0.14, n_contributors=None, dim_idx=None, output_path=None)
@@ -342,7 +342,7 @@ Computes for every categorical variable's value, the mean and std of the derived
 
 <h4>plot_num_explained_variance()</h4>
 
-[Source](https://github.com/malgar/clust-learn/blob/aa05a7cadea207057dc1b6dc6060d4aa505d744f/clearn/dimensionality_reduction/dimensionality_reduction.py#L286)
+[Source](https://github.com/malgar/clust-learn/blob/f0744a15823c2b7c6b49c278d08d708d05df952a/clearn/dimensionality_reduction/dimensionality_reduction.py#L286)
 
 ```
 plot_num_explained_variance(self, thres=0.5, plots='all', output_path=None, savefig_kws=None)
@@ -352,7 +352,7 @@ Plot the explained variance (ratio, cumulative, and/or normalized) for numerical
 
 <h4>plot_cat_explained_variance()</h4>
 
-[Source](https://github.com/malgar/clust-learn/blob/aa05a7cadea207057dc1b6dc6060d4aa505d744f/clearn/dimensionality_reduction/dimensionality_reduction.py#L303)
+[Source](https://github.com/malgar/clust-learn/blob/f0744a15823c2b7c6b49c278d08d708d05df952a/clearn/dimensionality_reduction/dimensionality_reduction.py#L303)
 
 ```
 plot_cat_explained_variance(self, thres=0.5, plots='all', output_path=None, savefig_kws=None)
@@ -362,7 +362,7 @@ Plot the explained variance (ratio, cumulative, and/or normalized) for categoric
 
 <h4>plot_num_main_contributors()</h4>
 
-[Source](https://github.com/malgar/clust-learn/blob/aa05a7cadea207057dc1b6dc6060d4aa505d744f/clearn/dimensionality_reduction/dimensionality_reduction.py#L321)
+[Source](https://github.com/malgar/clust-learn/blob/f0744a15823c2b7c6b49c278d08d708d05df952a/clearn/dimensionality_reduction/dimensionality_reduction.py#L321)
 
 ```
 plot_num_main_contributors(self, thres=0.5, n_contributors=5, dim_idx=None, output_path=None, savefig_kws=None)
@@ -372,7 +372,7 @@ Plot main contributors (original variables with the strongest relation with deri
 
 <h4>plot_cat_main_contributor_distribution()</h4>
 
-[Source](https://github.com/malgar/clust-learn/blob/aa05a7cadea207057dc1b6dc6060d4aa505d744f/clearn/dimensionality_reduction/dimensionality_reduction.py#L344)
+[Source](https://github.com/malgar/clust-learn/blob/f0744a15823c2b7c6b49c278d08d708d05df952a/clearn/dimensionality_reduction/dimensionality_reduction.py#L344)
 
 ```
 plot_cat_main_contributor_distribution(self, thres=0.14, n_contributors=None, dim_idx=None, output_path=None, savefig_kws=None)
