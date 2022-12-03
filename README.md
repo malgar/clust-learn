@@ -1,3 +1,9 @@
+<div align="center">
+  <img src="images/visualizations.png" alt="clust-learn visualizations"/>
+</div>
+
+<br/>
+
 <!-- title -->
 <div align="center">
   <h3>Clust-learn</h3>
