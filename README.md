@@ -1,11 +1,11 @@
 <!-- title -->
 <div align="center">
-  <h3>ldbx: Large Database Explainer</h3>
+  <h3>Clust-learn</h3>
 </div>
 
 <!-- Short description -->
 <p align="center">
-   A Python package for extracting valuable information from large databases.
+   A Python package for extracting information from large and high-dimensional mixed-type data through explainable cluster analysis.
 </p>
 
 <hr>
