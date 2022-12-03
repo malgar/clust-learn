@@ -1,9 +1,3 @@
-<div align="center">
-  <img src="images/visualizations.png" alt="clust-learn visualizations"/>
-</div>
-
-<br/>
-
 <!-- title -->
 <div align="center">
   <h3>Clust-learn</h3>
@@ -13,6 +7,12 @@
 <p align="center">
    A Python package for extracting information from large and high-dimensional mixed-type data through explainable cluster analysis.
 </p>
+
+<br/>
+
+<div align="center">
+  <img src="images/visualizations.png" alt="clust-learn visualizations"/>
+</div>
 
 <hr>
 
