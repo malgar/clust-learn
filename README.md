@@ -572,19 +572,19 @@ classifier = Classifier(df, predictor_cols, target, num_cols=None, cat_cols=None
 
 | Parameter | Type | Description |
 |:-|:-|:-|
-| df | pandas.DataFrame | Data frame containing the data |
-| predictor_cols | List of string | List of columns to use as predictors |
-| target | numpy.array or list | Values of the target variable |
-| num_cols | list | List of numerical columns from predictor_cols |
-| cat_cols | list | List of categorical columns from predictor_cols |
+| `df` | `pandas.DataFrame` | Data frame containing the data |
+| `predictor_cols` | `list` of `string` | List of columns to use as predictors |
+| `target` | `numpy.array` or `list` | Values of the target variable |
+| `num_cols` | `list` | List of numerical columns from predictor_cols |
+| `cat_cols` | `list` | List of categorical columns from predictor_cols |
 | **Attribute** | **Type** | **Description** |
-| filtered_features_ | list | List of columns of the input data frame |
-| model_ | Instance of TransformerMixin and BaseEstimator from sklearn.base | Trained classifier |
-| X_train_ | numpy.array | Train split of predictors |
-| X_test_ | numpy.array | Test split of predictors |
-| y_train_ | numpy.array | Train split of target |
-| y_test_ | numpy.array | Test split of target |
-| grid_result_ | sklearn.model_selection.GridSearchCV | Instance of fitted estimator for hyperparameter tuning |
+| `filtered_features_` | `list` | List of columns of the input data frame |
+| `model_` | Instance of `TransformerMixin` and `BaseEstimator` from `sklearn.base` | Trained classifier |
+| `X_train_` | `numpy.array` | Train split of predictors |
+| `X_test_` | `numpy.array` | Test split of predictors |
+| `y_train_` | `numpy.array` | Train split of target |
+| `y_test_` | `numpy.array` | Test split of target |
+| `grid_result_` | `sklearn.model_selection.GridSearchCV` | Instance of fitted estimator for hyperparameter tuning |
 
 <h4 id="Classifier_class_methods">
 Methods
