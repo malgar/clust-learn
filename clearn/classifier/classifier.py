@@ -1,5 +1,5 @@
 """Classification class"""
-# Author: Miguel Alvarez
+# Author: Miguel Alvarez-Garcia
 
 import logging
 import numpy as np
@@ -57,7 +57,8 @@ class Classifier:
 
         By default, it uses XGBoost, but any other estimator (instance of `scikit-learn.Estimator`) can be used.
 
-        The building process consists of three main steps:
+        The building process consists of four steps:
+         - Train-test split
          - Feature Selection (optional)
            Feature removing highly correlated variables using a classification model and SHAP values
            to determine which to keep, and Recursive Feature Elimination with Cross-Validation (RFECV)
@@ -90,28 +91,32 @@ class Classifier:
         train_size : float, default=0.8
             Size of the train split of the data for model training.
         """
+        # Data is split into train and test sets
+        X = self.df[self.original_features]
+        y = self.target
+        self.X_train_, self.X_test_, self.y_train_, self.y_test_ = train_test_split(X, y, train_size=train_size)
+
         # Feature selection
         if feature_selection:
             self.logger.info('Running feature selection...')
             if feature_selection_model is None:
-                min_samples_leaf = int(np.ceil(self.df.shape[0] * 0.05))
+                min_samples_leaf = int(np.ceil(self.X_train_.shape[0] * 0.05))
                 feature_selection_model = RandomForestClassifier(max_depth=10,  min_samples_leaf=min_samples_leaf,
                                                                  random_state=42)
 
-            self.filtered_features_ = utils.feature_selection(self.df, self.original_features, self.target,
-                                                             feature_selection_model, self.num_vars, self.cat_vars,
-                                                             features_to_keep)
+            self.filtered_features_ = utils.feature_selection(self.df.loc[self.X_train_.index], self.original_features,
+                                                              self.target.loc[self.X_train_.index],
+                                                              feature_selection_model, self.num_vars, self.cat_vars,
+                                                              features_to_keep)
+
+            self.X_train_ = self.X_train_[self.filtered_features_]
+            self.X_test_ = self.X_test_[self.filtered_features_]
         else:
             self.filtered_features_ = self.original_features.copy()
 
-        # Data is split into train and test sets
-        X = self.df[self.filtered_features_]
-        y = self.target
-        self.X_train_, self.X_test_, self.y_train_, self.y_test_ = train_test_split(X, y, train_size=train_size)
-
         # Model instantiation
         if model is None:
-            model = XGBClassifier(eval_metric='auc', random_state=42)
+            model = XGBClassifier(eval_metric='auc', use_label_encoder=False, random_state=42)
         self.model_ = model
 
         # Hyperparameter tuning

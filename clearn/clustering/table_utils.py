@@ -1,4 +1,6 @@
-# Table statistics utils for clustering
+"""Table statistics utils for clustering"""
+# Author: Miguel Alvarez-Garcia
+
 
 def compare_cluster_means_to_global_means(df, dimensions, data_standardized=False, output_path=None):
     df_agg = df.groupby('cluster')[dimensions].mean()

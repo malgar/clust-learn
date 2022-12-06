@@ -1,5 +1,5 @@
 """Clustering with KMeans++ as default algorithm"""
-# Author: Miguel Alvarez
+# Author: Miguel Alvarez-Garcia
 
 import pandas as pd
 import statsmodels.api as sm

@@ -1,6 +1,8 @@
-# Visualization utils for the classifier module
+"""Visualization utils for the classifier module"""
+# Author: Miguel Alvarez-Garcia
 
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 import seaborn as sns
 import shap
@@ -9,7 +11,7 @@ import utils
 from matplotlib.collections import QuadMesh
 from sklearn.preprocessing import label_binarize
 from sklearn.metrics import roc_curve, auc
-from ..utils import *
+from ..utils import savefig
 
 sns.set_style('whitegrid')
 

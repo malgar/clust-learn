@@ -1,4 +1,5 @@
-# Utils for visualization
+"""Utils for visualization"""
+# Author: Miguel Alvarez-Garcia
 
 import matplotlib.pyplot as plt
 import networkx as nx

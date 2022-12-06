@@ -1,13 +1,17 @@
+"""Visualization utils for dimensionality reduction"""
+# Author: Miguel Alvarez-Garcia
+
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import seaborn as sns
 
 from kneed import KneeLocator
 from matplotlib.gridspec import GridSpec
 
-from table_utils import *
-from ..utils import *
+from table_utils import cat_main_contributors, num_main_contributors
+from ..utils import get_axis, plot_optimal_normalized_elbow, savefig
 
 sns.set_style('whitegrid')
 

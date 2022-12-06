@@ -1,5 +1,5 @@
 """Data preprocessing"""
-# Author: Miguel Alvarez
+# Author: Miguel Alvarez-Garcia
 
 import networkx as nx
 import numpy as np

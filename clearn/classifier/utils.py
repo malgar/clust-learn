@@ -1,14 +1,14 @@
-# Utils for the classification module
+"""Utils for the classification module"""
+# Author: Miguel Alvarez-Garcia
 
 import logging
 import numpy as np
 import pandas as pd
 import shap
 
-from sklearn.ensemble import RandomForestClassifier
 from sklearn.feature_selection import RFECV
 from sklearn.model_selection import GridSearchCV
-from ..utils import *
+from ..utils import compute_high_corr_pairs, compute_highly_related_categorical_vars, compute_highly_related_mixed_vars
 
 logging.basicConfig(
     format='%(asctime)s %(levelname)-8s %(name)s: %(message)s',
@@ -136,8 +136,12 @@ def feature_selection(df, original_features, target, classifier, num_vars=None, 
         List with selected features.
     """
 
-    assert (len(original_features) == (len(num_vars) if num_vars else 0) + (len(cat_vars) if cat_vars else 0),
-            "`original_features` != `num_vars` + `cat_vars`")
+    tot_vars = 0
+    if cat_vars:
+        tot_vars += len(cat_vars)
+    if num_vars:
+        tot_vars += len(num_vars)
+    assert len(original_features) == tot_vars, "`original_features` != `num_vars` + `cat_vars`"
 
     # First, we compute highly related pairs of variables
     if num_kws is None:

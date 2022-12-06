@@ -1,9 +1,9 @@
 """Dimensionality Reduction with PCA as reference"""
-# Author: Miguel Alvarez
+# Author: Miguel Alvarez-Garcia
 
 import prince
 
-from sklearn.decomposition import *
+from sklearn.decomposition import PCA, SparsePCA
 from sklearn.preprocessing import StandardScaler
 from table_utils import *
 from viz_utils import *

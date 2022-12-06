@@ -1,4 +1,5 @@
-# Utils for clustering
+"""Utils for clustering"""
+# Author: Miguel Alvarez-Garcia
 
 import numpy as np
 import pandas as pd

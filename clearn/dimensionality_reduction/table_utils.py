@@ -1,4 +1,5 @@
-# Utils
+"""Table utils for dimensionality reduction"""
+# Author: Miguel Alvarez-Garcia
 
 import numpy as np
 import pandas as pd

@@ -1,12 +1,14 @@
-# Utils for visualization
+"""Utils for visualization"""
+# Author: Miguel Alvarez-Garcia
 
 import matplotlib
 import matplotlib.pyplot as plt
+import numpy as np
 import seaborn as sns
 
 from kneed import KneeLocator
-from table_utils import *
-from ..utils import *
+from table_utils import compare_cluster_means_to_global_means
+from ..utils import get_axis, plot_optimal_normalized_elbow, savefig
 
 
 sns.set_style('whitegrid')
@@ -201,7 +203,7 @@ def plot_distribution_by_cluster(df, cluster_labels, xlabel=None, ylabel=None, s
         sns.stripplot(y=df[col], x=cluster_labels, alpha=0.7, size=3, ax=ax)
         ax.set_ylabel(col if ylabel is None else ylabel, fontsize=12, labelpad=15)
         if i // ncols == nrows-1:
-            ax.set_xlabel('custer' if xlabel is None else xlabel, fontsize=12, labelpad=15)
+            ax.set_xlabel('cluster' if xlabel is None else xlabel, fontsize=12, labelpad=15)
         i += 1
 
     while i < ncols * nrows:
