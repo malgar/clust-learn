@@ -9,9 +9,9 @@ from sklearn.cluster import AgglomerativeClustering, KMeans
 from sklearn.metrics import calinski_harabasz_score, davies_bouldin_score, silhouette_score
 from sklearn.preprocessing import MinMaxScaler
 from statsmodels.formula.api import ols
-from table_utils import *
-from utils import *
-from viz_utils import *
+from .table_utils import *
+from .utils import *
+from .viz_utils import *
 
 __metrics__ = ['inertia', 'davies_bouldin_score', 'silhouette_score', 'calinski_harabasz_score']
 METRIC_NAMES = dict(zip(__metrics__,

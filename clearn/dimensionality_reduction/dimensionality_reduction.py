@@ -5,8 +5,8 @@ import prince
 
 from sklearn.decomposition import PCA, SparsePCA
 from sklearn.preprocessing import StandardScaler
-from table_utils import *
-from viz_utils import *
+from .table_utils import *
+from .viz_utils import *
 
 
 class DimensionalityReduction:
