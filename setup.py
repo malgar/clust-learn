@@ -19,7 +19,7 @@ setup(
     packages=find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
-        "License :: GPLv3",
+        "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
         'Topic :: Machine Learning',
         'Programming Language :: Python :: 3.9'
     ],
