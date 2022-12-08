@@ -7,7 +7,7 @@ import numpy as np
 import seaborn as sns
 
 from kneed import KneeLocator
-from table_utils import compare_cluster_means_to_global_means
+from .table_utils import compare_cluster_means_to_global_means
 from ..utils import get_axis, plot_optimal_normalized_elbow, savefig
 
 
