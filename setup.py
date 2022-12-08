@@ -20,7 +20,7 @@ setup(
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
-        'Topic :: Machine Learning',
+        'Topic :: Scientific/Engineering',
         'Programming Language :: Python :: 3.9'
     ],
     license='GPLv3',
