@@ -10,9 +10,7 @@
 
 <br/>
 
-<div align="center">
-  <img src="images/visualizations.png" alt="clust-learn visualizations"/>
-</div>
+![clust-learn visualizations](https://github.com/malgar/clust-learn/blob/v0.0.8/images/visualizations.png?raw=true)
 
 <hr>
 
@@ -63,9 +61,7 @@ explainability strategies.
 
 <br/>
 
-<div align="center">
-  <img src="images/package_structure.png" alt="clust-learn package structure"/>
-</div>
+![clust-learn package structure](https://github.com/malgar/clust-learn/blob/v0.0.8/images/package_structure.png?raw=true)
 
 <br/>
 
@@ -82,7 +78,7 @@ It can be installed manually or from pip/PyPI (see Section [4. Installation](#us
 4. Installation
 </h2>
 
-The package is on [PyPI]([!!link]). Simply run:
+The package is on [PyPI](https://pypi.org/project/clust-learn/). Simply run:
 
 ```
 pip install clust-learn
@@ -92,8 +88,8 @@ pip install clust-learn
 5. Version and license information
 </h2>
 
-* Version: 1.0
-* Author: Miguel Alvarez (@gmail.com)
+* Version: 0.1
+* Author: Miguel Alvarez (malvarez.statistics@gmail.com)
 * License: GPLv3 
 
 <h2 id="user-content-future">
