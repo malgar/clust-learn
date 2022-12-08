@@ -10,7 +10,7 @@ import shap
 from matplotlib.collections import QuadMesh
 from sklearn.preprocessing import label_binarize
 from sklearn.metrics import roc_curve, auc
-from .utils import shap_importances
+from .utils import get_shap_importances
 from ..utils import savefig
 
 sns.set_style('whitegrid')
@@ -34,7 +34,7 @@ def plot_shap_importances(model, X, n_top=7, output_path=None, savefig_kws=None)
     savefig_kws : dict, default=None
         Save figure options.
     """
-    si = shap_importances(model, X)
+    si = get_shap_importances(model, X)
     low_imp = si.loc[n_top:]
     si = si.loc[:n_top - 1]
     si = si.append(pd.DataFrame({'variable_name': ['Rest'], 'shap_importance': [low_imp['shap_importance'].sum()]}),

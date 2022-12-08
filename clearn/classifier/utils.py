@@ -18,7 +18,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def shap_importances(classifier, X):
+def get_shap_importances(classifier, X):
     """
     Computes shap importance values as the combined average of the absolute values of the shap values
     for all classes.
@@ -93,8 +93,8 @@ def _compute_highly_related_pairs(df, num_vars=None, cat_vars=None, num_kws=None
     return final_pairs
 
 
-def feature_selection(df, original_features, target, classifier, num_vars=None, cat_vars=None, features_to_keep=[],
-                      num_kws=None, mixed_kws=None, cat_kws=None, rfecv_kws=None):
+def run_feature_selection(df, original_features, target, classifier, num_vars=None, cat_vars=None, features_to_keep=[],
+                          num_kws=None, mixed_kws=None, cat_kws=None, rfecv_kws=None):
     """
     Performs feature selection in three steps:
         - First, if some features must be kept (informed in `features_to_keep`), those other
@@ -199,7 +199,7 @@ def feature_selection(df, original_features, target, classifier, num_vars=None, 
     return filtered_features
 
 
-def hyperparameter_tuning(X_train, y_train, classifier, param_grid, gridsearch_kws=None):
+def run_hyperparameter_tuning(X_train, y_train, classifier, param_grid, gridsearch_kws=None):
     """
     Runs grid search with cross-validation for hyperparameter tuning.
 

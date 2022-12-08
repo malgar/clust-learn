@@ -9,7 +9,7 @@ from sklearn.metrics import classification_report, confusion_matrix
 from sklearn.model_selection import train_test_split
 from xgboost import XGBClassifier
 
-from .utils import feature_selection, hyperparameter_tuning, shap_importances
+from .utils import run_feature_selection, run_hyperparameter_tuning, get_shap_importances
 from .viz_utils import *
 
 
@@ -104,10 +104,10 @@ class Classifier:
                 feature_selection_model = RandomForestClassifier(max_depth=10,  min_samples_leaf=min_samples_leaf,
                                                                  random_state=42)
 
-            self.filtered_features_ = feature_selection(self.df.loc[self.X_train_.index], self.original_features,
-                                                              self.target.loc[self.X_train_.index],
-                                                              feature_selection_model, self.num_vars, self.cat_vars,
-                                                              features_to_keep)
+            self.filtered_features_ = run_feature_selection(self.df.loc[self.X_train_.index], self.original_features,
+                                                            self.target.loc[self.X_train_.index],
+                                                            feature_selection_model, self.num_vars, self.cat_vars,
+                                                            features_to_keep)
 
             self.X_train_ = self.X_train_[self.filtered_features_]
             self.X_test_ = self.X_test_[self.filtered_features_]
@@ -124,7 +124,7 @@ class Classifier:
             if param_grid is None:
                 raise RuntimeError('For hyperparameter tuning, some parameter grid must be passed - `param_grid`')
             self.logger.info('Running hyperparameter tuning...')
-            self.grid_result_ = hyperparameter_tuning(self.X_train_, self.y_train_, self.model_, param_grid)
+            self.grid_result_ = run_hyperparameter_tuning(self.X_train_, self.y_train_, self.model_, param_grid)
             self.model_.set_params(**self.grid_result_.best_params_)
 
         # Model training
@@ -134,7 +134,7 @@ class Classifier:
 
     @property
     def feature_importances(self):
-        return shap_importances(self.model_, self.X_train_)
+        return get_shap_importances(self.model_, self.X_train_)
 
     def hyperparameter_tuning_metrics(self, output_path=None):
         """
