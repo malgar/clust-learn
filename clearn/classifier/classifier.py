@@ -104,7 +104,7 @@ class Classifier:
                 feature_selection_model = RandomForestClassifier(max_depth=10,  min_samples_leaf=min_samples_leaf,
                                                                  random_state=42)
 
-            self.filtered_features_ = utils.feature_selection(self.df.loc[self.X_train_.index], self.original_features,
+            self.filtered_features_ = feature_selection(self.df.loc[self.X_train_.index], self.original_features,
                                                               self.target.loc[self.X_train_.index],
                                                               feature_selection_model, self.num_vars, self.cat_vars,
                                                               features_to_keep)
@@ -124,7 +124,7 @@ class Classifier:
             if param_grid is None:
                 raise RuntimeError('For hyperparameter tuning, some parameter grid must be passed - `param_grid`')
             self.logger.info('Running hyperparameter tuning...')
-            self.grid_result_ = utils.hyperparameter_tuning(self.X_train_, self.y_train_, self.model_, param_grid)
+            self.grid_result_ = hyperparameter_tuning(self.X_train_, self.y_train_, self.model_, param_grid)
             self.model_.set_params(**self.grid_result_.best_params_)
 
         # Model training
@@ -134,7 +134,7 @@ class Classifier:
 
     @property
     def feature_importances(self):
-        return utils.shap_importances(self.model_, self.X_train_)
+        return shap_importances(self.model_, self.X_train_)
 
     def hyperparameter_tuning_metrics(self, output_path=None):
         """
