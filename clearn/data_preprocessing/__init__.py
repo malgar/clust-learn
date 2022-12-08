@@ -10,6 +10,7 @@ from .data_preprocessing import (
 )
 
 from .viz_utils import (
+	missing_values_heatmap,
     plot_imputation_pairs_scatter,
     plot_imputation_distribution_assessment,
     plot_variable_graph_partitioning_components
@@ -26,6 +27,7 @@ __all__ = [
     "remove_outliers",
     "variable_graph_partitioning",
     # visualization utils
+	"missing_values_heatmap",
     "plot_imputation_pairs_scatter",
     "plot_imputation_distribution_assessment",
     "plot_variable_graph_partitioning_components"
