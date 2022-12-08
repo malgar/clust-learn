@@ -8,11 +8,11 @@ _Note_ that the guides are designed so that the output of the data processing gu
 
 | Guide | Module | Description |
 |:-|:-|:-|
-| [`data_preprocessing_guide_default`](link) | [`data_preprocessing`](https://github.com/malgar/clust-learn/tree/master/clearn/data_preprocessing) | Perform data preprocessing in default mode. Recommended for beginners. |
-| [`data_preprocessing_guide_custom`](link) | [`data_preprocessing`](https://github.com/malgar/clust-learn/tree/master/clearn/data_preprocessing) | Perform data preprocessing step by step with options to customize data imputation. Recommended for users who are familiar with the methodology. |
-| [`dimensionality_reduction_guide`](link) | [`dimensionality_reduction`](https://github.com/malgar/clust-learn/tree/master/clearn/dimensionality_reduction) | Perform dimensionality reduction and explain how the new derived variables explain the original ones. |
-| [`clustering_guide`](link)  | [`clustering`](https://github.com/malgar/clust-learn/tree/master/clearn/clustering) | Perfom cluster analysis, assess performance, and explain the obtained clusters with internal and external variables. |
-| [`classifier_guide`](link) | [`classifier`](https://github.com/malgar/clust-learn/tree/master/clearn/classifier) | Perform classification, assess model performance, and explain results using SHAP values. This guide shows how to use the module to further explain the clusters obtained in the `clustering_guide`; however, the module may be used to fit any classificaton model |
+| [`data_preprocessing_guide_default`](https://github.com/malgar/clust-learn/blob/master/notebooks/data_preprocessing_guide_default.ipynb) | [`data_preprocessing`](https://github.com/malgar/clust-learn/tree/master/clearn/data_preprocessing) | Perform data preprocessing in default mode. Recommended for beginners. |
+| [`data_preprocessing_guide_custom`](https://github.com/malgar/clust-learn/blob/master/notebooks/data_preprocessing_guide_custom.ipynb) | [`data_preprocessing`](https://github.com/malgar/clust-learn/tree/master/clearn/data_preprocessing) | Perform data preprocessing step by step with options to customize data imputation. Recommended for users who are familiar with the methodology. |
+| [`dimensionality_reduction_guide`](https://github.com/malgar/clust-learn/blob/master/notebooks/dimensionality_reduction_guide.ipynb) | [`dimensionality_reduction`](https://github.com/malgar/clust-learn/tree/master/clearn/dimensionality_reduction) | Perform dimensionality reduction and explain how the new derived variables explain the original ones. |
+| [`clustering_guide`](https://github.com/malgar/clust-learn/blob/master/notebooks/clustering_guide.ipynb)  | [`clustering`](https://github.com/malgar/clust-learn/tree/master/clearn/clustering) | Perfom cluster analysis, assess performance, and explain the obtained clusters with internal and external variables. |
+| [`classifier_guide`](https://github.com/malgar/clust-learn/blob/master/notebooks/classifier_guide.ipynb) | [`classifier`](https://github.com/malgar/clust-learn/tree/master/clearn/classifier) | Perform classification, assess model performance, and explain results using SHAP values. This guide shows how to use the module to further explain the clusters obtained in the `clustering_guide`; however, the module may be used to fit any classificaton model |
 
 
 ## Data
