@@ -175,7 +175,7 @@ def run_feature_selection(df, original_features, target, classifier, num_vars=No
             X = df[filtered_features]
             y = target
             classifier.fit(X, y)
-            importances = shap_importances(classifier, X)
+            importances = get_shap_importances(classifier, X)
             updated = False
             for feat in importances['variable_name']:
                 if feat in hi_rel['var1'].to_list() and feat not in visited:
