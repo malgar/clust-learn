@@ -89,7 +89,7 @@ pip install clust-learn
 </h2>
 
 * Version: 0.1
-* Author: Miguel Alvarez (malvarez.statistics@gmail.com)
+* Author: Miguel Alvarez-Garcia (malvarez.statistics@gmail.com)
 * License: GPLv3 
 
 <h2 id="user-content-future">
