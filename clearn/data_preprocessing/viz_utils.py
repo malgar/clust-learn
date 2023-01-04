@@ -6,7 +6,7 @@ import networkx as nx
 import numpy as np
 import seaborn as sns
 
-from ..utils import savefig
+from ..utils import get_axis, savefig
 
 
 def missing_values_heatmap(df, output_path=None, savefig_kws=None):
@@ -59,7 +59,7 @@ def plot_imputation_pairs_scatter(df, imputation_pairs, sample_frac=1.0, scatter
     df_sample = df.sample(frac=sample_frac, random_state=42)
     i = 0
     for idx, row in imputation_pairs.iterrows():
-        ax = axs[i // ncols, i % ncols]
+        ax = get_axis(i, axs, ncols, nrows)
         sns.regplot(x=row['var2'], y=row['var1'], data=df_sample, scatter_kws=scatter_kws, line_kws=line_kws, ax=ax)
         ax.set_xlabel(f"{row['var2']} ({'{:.2f}'.format(row['missing_var2'])}% NA)")
         ax.set_ylabel(f"{row['var1']} ({'{:.2f}'.format(row['missing_var1'])}% NA)")
@@ -101,7 +101,7 @@ def plot_imputation_distribution_assessment(df_prior, df_posterior, imputed_vars
     df_prior_sample = df_prior.sample(frac=sample_frac, random_state=42)
     i = 0
     for ivar in imputed_vars:
-        ax = axs[i // ncols, i % ncols]
+        ax = get_axis(i, axs, ncols, nrows)
         sns.kdeplot(ivar, data=df_prior_sample, label='Before imputation', ax=ax, **prior_kws)
         sns.kdeplot(ivar, data=df_posterior.loc[df_prior_sample.index], label='After imputation', ax=ax,
                     **posterior_kws)

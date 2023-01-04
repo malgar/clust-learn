@@ -149,7 +149,7 @@ def plot_num_main_contributors(df, df_trans, thres=0.5, n_contributors=5, dim_id
     ncols = 2
     if nplots == 1:
         ncols = 1
-    if nplots % 2 > 0 or nplots % 3 == 0:
+    elif nplots % 2 > 0 or nplots % 3 == 0:
         ncols = 3
 
     nbars = mc.groupby('component')['var_name'].count().max()
