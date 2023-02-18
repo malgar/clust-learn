@@ -88,7 +88,7 @@ pip install clust-learn
 5. Version and license information
 </h2>
 
-* Version: 0.1
+* Version: 0.1.2
 * Author: Miguel Alvarez-Garcia (malvarez.statistics@gmail.com)
 * License: GPLv3 
 
