@@ -124,11 +124,15 @@ class DimensionalityReduction:
 
         idx_positions = np.maximum(len(str(trans.shape[1])), 2)
         trans.columns = [f'dim_{str(i+1).zfill(idx_positions)}' for i in range(trans.shape[1])]
-        self.num_components_ = list(trans.columns)[:self.num_trans_.shape[1]]
-        self.num_trans_.columns = self.num_components_
-        self.cat_components_ = list(trans.columns)[-self.cat_trans_.shape[1]:]
-        self.cat_trans_.columns = self.cat_components_
-        self.n_components_ = len(self.num_components_) + len(self.cat_components_)
+        self.n_components_ = 0
+        if self.num_vars is not None:
+            self.num_components_ = list(trans.columns)[:self.num_trans_.shape[1]]
+            self.num_trans_.columns = self.num_components_
+            self.n_components_ += len(self.num_components_)
+        if self.cat_vars is not None:
+            self.cat_components_ = list(trans.columns)[-self.cat_trans_.shape[1]:]
+            self.cat_trans_.columns = self.cat_components_
+            self.n_components_ += len(self.cat_components_)
         return trans
 
     def _transform_num(self, df, n_components_num=None):
