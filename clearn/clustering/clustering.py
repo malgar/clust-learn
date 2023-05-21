@@ -69,23 +69,32 @@ class Clustering:
 
         self.metric_ = 'inertia'
         self.optimal_config_ = None
+        self.weights_ = None
 
     def _initialize_scores(self):
         for algorithm in self.algorithms:
             if algorithm in KMEANS + HIERARCHICAL_WARD:
                 self.scores_[algorithm] = []
 
-    def _compute_clusters(self, algorithm, n_clusters):
+    def _compute_clusters(self, algorithm, n_clusters, weights=None):
         self.instances_[algorithm].set_params(n_clusters=n_clusters)
-        self.instances_[algorithm].fit(self.df[self.dimensions_])
+        if algorithm in KMEANS and weights is not None:
+            self.instances_[algorithm].fit(self.df[self.dimensions_], sample_weight=weights)
+        else:
+            self.instances_[algorithm].fit(self.df[self.dimensions_])
         self.labels_ = self.instances_[algorithm].labels_
 
-    def _compute_optimal_clustering_config(self, metric, cluster_range, weights):
+    def _compute_optimal_clustering_config(self, metric, cluster_range, weights=None):
         optimal_list = []
         for algorithm in self.algorithms:
             for nc in range(*cluster_range):
                 self.instances_[algorithm].set_params(n_clusters=nc)
-                self.instances_[algorithm].fit(self.df[self.dimensions_])
+
+                # TODO: When module is generalized to accept any algorithm, use inspect package with `getfullargspec()`
+                if algorithm in KMEANS and weights is not None:
+                    self.instances_[algorithm].fit(self.df[self.dimensions_], sample_weight=weights)
+                else:
+                    self.instances_[algorithm].fit(self.df[self.dimensions_])
 
                 if metric == 'inertia':
                     self.scores_[algorithm].append(
@@ -142,7 +151,6 @@ class Clustering:
             Used for cluster naming. Naming format: `f'{prefix}_{x}'`
         weights : `numpy.array`, default=None
             In case observations have different weights.
-            *Note this is not implemented yet.*
 
         Returns
         ----------
@@ -155,6 +163,7 @@ class Clustering:
 
         self._initialize_scores()
         self.metric_ = metric
+        self.weights_ = weights
 
         # Compute optimal number of clusters
         cluster_range = []
@@ -168,7 +177,7 @@ class Clustering:
         if self.optimal_config_ is None:
             raise RuntimeError('Optimal cluster configuration not available')
 
-        self._compute_clusters(self.optimal_config_[0], self.optimal_config_[1])
+        self._compute_clusters(self.optimal_config_[0], self.optimal_config_[1], weights)
 
         # Might be interesting to only keep one
         self.df['cluster'] = self.labels_
@@ -199,6 +208,7 @@ class Clustering:
         statistics : str or list, default=['mean', 'median', 'std']
             Statistics to use for describing clusters.
             *Note any statistics supported by Pandas can be used. This includes the `describe` function*
+            If weights are used for clustering, 'wmean' and 'wstd' can be used for weighted mean and standard dev.
         output_path : str, default=None
             If an output_path is passed, the resulting DataFame is saved as a CSV file.
 
@@ -226,6 +236,13 @@ class Clustering:
         if not isinstance(cluster_filter, list):
             cluster_filter = [cluster_filter]
 
+        if 'wmean' in statistics:
+            def wmean(x): return weighted_mean(x, self.weights_[x.index])
+            statistics[statistics.index('wmean')] = wmean
+        if 'wstd' in statistics:
+            def wstd(x): return weighted_std(x, self.weights_[x.index])
+            statistics[statistics.index('wstd')] = wstd
+
         res = df_ext[df_ext['cluster'].isin(cluster_filter)].groupby('cluster').agg(
             dict(zip(list(variables), [statistics] * len(variables)))).reset_index()
 
@@ -234,7 +251,8 @@ class Clustering:
 
         return res
 
-    def describe_clusters_cat(self, cat_array, cat_name=None, order=None, normalize=False, output_path=None):
+    def describe_clusters_cat(self, cat_array, cat_name, order=None, normalize=False, use_weights=False,
+                              output_path=None):
         """
         Describes clusters based on  external *categorical* variables. The result is a contingency table.
         For continuous variables use `describe_clusters()`.
@@ -244,12 +262,14 @@ class Clustering:
         cat_array : `pandas.Series` or `numpy.array`
             Values of categorical variable.
             The order of the observations must be the same as that of the base DataFrame.
-        cat_name : str, default=None
+        cat_name : str
             Name of the categorical variable.
         order : list or `numpy.array`, default=None
             In case categories should be displayed in a specific order.
         normalize : boolean, default=False
             If True, results are row-normalized.
+        use_weights : boolean, default=False
+            If True, frequencies are computed using weights.
         output_path : str, default=None
             If an output_path is passed, the resulting DataFame is saved as a CSV file.
 
@@ -259,6 +279,12 @@ class Clustering:
             DataFrame with a cluster description based on the passed categorical variable.
         """
         freq = pd.crosstab(index=self.df['cluster_cat'], columns=cat_array, rownames=['Clusters'], colnames=[cat_name])
+        if use_weights:
+            wcrosstab_df = pd.DataFrame(data=[self.df['cluster_cat'], cat_array, self.weights_],
+                                        index=['Clusters', cat_name, 'weights']).transpose()
+            freq = wcrosstab_df.groupby(['Clusters', cat_name]).agg({'weights': 'sum'}).reset_index()\
+                .pivot(index='Clusters', columns=cat_name, values='weights')
+
         if order is not None:
             freq = freq[order]
 
@@ -295,10 +321,10 @@ class Clustering:
             var_names = list(df_original.columns)
             df_original = df_original.copy()
             df_original['cluster'] = self.labels_
-            return compare_cluster_means_to_global_means(df_original, var_names, output_path=output_path)
+            return compare_cluster_means_to_global_means(df_original, var_names, self.weights_, output_path=output_path)
         else:
-            return compare_cluster_means_to_global_means(self.df, self.dimensions_, data_standardized=not self.normalize,
-                                                         output_path=output_path)
+            return compare_cluster_means_to_global_means(self.df, self.dimensions_, self.weights_,
+                                                         data_standardized=not self.normalize, output_path=output_path)
 
     def anova_tests(self, df_test=None, vars_test=None, cluster_filter=None, output_path=None):
         """
@@ -416,20 +442,25 @@ class Clustering:
         else:
             raise RuntimeError('This plot can only be used when `cluster_range` contains at least 2 values')
 
-    def plot_clustercount(self, output_path=None, savefig_kws=None):
+    def plot_clustercount(self, use_weights=False, output_path=None, savefig_kws=None):
         """
         Plots a bar plot with cluster counts.
 
         Parameters
         ----------
+        use_weights: bool
+            Whether to use sample weights.
         output_path : str, default=None
             Path to save figure as image.
         savefig_kws : dict, default=None
             Save figure options.
         """
-        plot_clustercount(self.df, output_path, savefig_kws)
+        if use_weights:
+            plot_clustercount(self.df, self.weights_, output_path, savefig_kws)
+        else:
+            plot_clustercount(self.df, output_path, savefig_kws)
 
-    def plot_cluster_means_to_global_means_comparison(self, df_original=None, xlabel=None, ylabel=None,
+    def plot_cluster_means_to_global_means_comparison(self, use_weights= False, df_original=None, xlabel=None, ylabel=None,
                                                       levels=[-0.50, -0.32, -0.17, -0.05, 0.05, 0.17, 0.32, 0.50],
                                                       output_path=None, savefig_kws=None):
         """
@@ -437,6 +468,8 @@ class Clustering:
 
         Parameters
         ----------
+        use_weights : bool, default=False
+            Whether to use sample weights.
         df_original : `pandas.DataFrame`, default=None
             In case the comparison wants to be made with the original variables and values. Note it is assumed that both
             the original dataframe and the one used for clustering have observations is the same order.
@@ -452,17 +485,20 @@ class Clustering:
         savefig_kws : dict, default=None
             Save figure options.
         """
+        weights = None
+        if use_weights:
+            weights = self.weights_
 
         if df_original is not None:
             var_names = list(df_original.columns)
             df_original = df_original.copy()
             df_original['cluster'] = self.labels_
 
-            plot_cluster_means_to_global_means_comparison(df_original, var_names, xlabel, ylabel, levels,
+            plot_cluster_means_to_global_means_comparison(df_original, var_names, weights, xlabel, ylabel, levels,
                                                           data_standardized=False, output_path=output_path,
                                                           savefig_kws=savefig_kws)
         else:
-            plot_cluster_means_to_global_means_comparison(self.df, self.dimensions_, xlabel, ylabel, levels,
+            plot_cluster_means_to_global_means_comparison(self.df, self.dimensions_, weights, xlabel, ylabel, levels,
                                                           data_standardized=not self.normalize, output_path=output_path,
                                                           savefig_kws=savefig_kws)
 
@@ -495,7 +531,7 @@ class Clustering:
         plot_distribution_by_cluster(df_ext, self.labels_, xlabel=xlabel, ylabel=ylabel, sharey=sharey,
                                      output_path=output_path, savefig_kws=savefig_kws)
 
-    def plot_clusters_2D(self, coor1, coor2, style_kwargs=dict(), output_path=None, savefig_kws=None):
+    def plot_clusters_2D(self, coor1, coor2, use_weights=False, style_kwargs=dict(), output_path=None, savefig_kws=None):
         """
         Plots two 2D plots:
          - A scatter plot styled by the categorical variable `hue`.
@@ -511,10 +547,13 @@ class Clustering:
             If int, it represents the id of the internal variable to be used.
             If str, it must be an internal variable name.
             If `pandas.Series`, it is assumed it is an external variable.
+        use_weights : bool, default=False
+            Whether to use weights for centroid comparison.
         style_kwargs : dict, default=empty dict
             Dictionary with optional styling parameters.
             List of parameters:
              - palette : matplotlib palette to be used. default='gnuplot'
+             - alpha : the alpha blending value, between 0 (transparent) and 1 (opaque). default=0.3
              - vline_color : color to be used for vertical line (used for plotting x mean value). default='#11A579'
              - hline_color : color to be used for horizontal line (used for plotting y mean value). default='#332288'
              - kdeplot : boolean to display density area of points (using seabonr.kdeplot). default=True
@@ -539,7 +578,10 @@ class Clustering:
             coor2 = coor2.name
 
         hue = 'cluster_cat'
-        plot_clusters_2D(coor1, coor2, hue, df_ext, style_kwargs=style_kwargs, output_path=output_path,
+        weights = None
+        if use_weights:
+            weights = self.weights_
+        plot_clusters_2D(coor1, coor2, hue, df_ext, weights, style_kwargs=style_kwargs, output_path=output_path,
                          savefig_kws=savefig_kws)
 
     def plot_cat_distribution_by_cluster(self, cat_array, cat_label=None, cluster_label=None, output_path=None,

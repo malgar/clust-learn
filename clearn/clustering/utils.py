@@ -38,3 +38,43 @@ def weighted_sum_of_squared_distances(df, cluster_arr, weights=None):
             wssd += np.sum(np.array(list(map(np.sum, descr.demeaned ** 2))) * local_weights)
 
     return wssd
+
+
+def weighted_mean(data, weights=None):
+    """
+    Calculates the weighted mean of an array/list.
+
+    Parameters
+    ----------
+    data : `numpy.array` or list, default=None
+         Array containing data to be averaged.
+    weights : `numpy.array` or list
+       An array of weights associated with the values in `data`
+
+    Returns
+    ----------
+    res : float
+        (Weighted) mean.
+    """
+    return np.average(data, weights=weights)
+
+
+def weighted_std(data, weights=None):
+    """
+    Calculates the weighted standard deviation of an array/list.
+
+    Parameters
+    ----------
+    data : `numpy.array` or list, default=None
+         Array containing data.
+    weights : `numpy.array` or list
+       An array of weights associated with the values in `data`
+
+    Returns
+    ----------
+    res : float
+        (Weighted) standard deviation.
+    """
+    average = np.average(data, weights=weights)
+    variance = np.average((data-average)**2, weights=weights)
+    return np.sqrt(variance)

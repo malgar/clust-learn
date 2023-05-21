@@ -4,10 +4,12 @@
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import seaborn as sns
 
 from kneed import KneeLocator
 from .table_utils import compare_cluster_means_to_global_means
+from .utils import *
 from ..utils import get_axis, plot_optimal_normalized_elbow, savefig
 
 
@@ -76,7 +78,7 @@ def plot_optimal_components_normalized(scores, max_clusters, metric_name, output
     savefig(output_path=output_path, savefig_kws=savefig_kws)
 
 
-def plot_clustercount(df, output_path=None, savefig_kws=None):
+def plot_clustercount(df, weights=None, output_path=None, savefig_kws=None):
     """
     Plots a bar plot with cluster counts.
 
@@ -84,13 +86,21 @@ def plot_clustercount(df, output_path=None, savefig_kws=None):
     ----------
     df : `pandas.DataFrame`
         DataFrame containing at least a column named 'cluster_cat' with the cluster labels.
+    weights: `numpy.array`, default=None
+        Sample weights
     output_path : str, default=None
         Path to save figure as image.
     savefig_kws : dict, default=None
         Save figure options.
     """
     plt.figure(figsize=(df['cluster_cat'].nunique(), 5))
-    sns.countplot(x='cluster_cat', data=df, color='#332288', alpha=0.9, order=np.sort(df['cluster_cat'].unique()))
+    if weights is None:
+        sns.countplot(x='cluster_cat', data=df, color='#332288', alpha=0.9, order=np.sort(df['cluster_cat'].unique()))
+    else:
+        bar_df = pd.concat([df['cluster_cat'], pd.Series(weights, name='weights')], axis=1).groupby(
+            'cluster_cat').agg({'weights': 'sum'}).reset_index()
+        sns.barplot(x='cluster_cat', y='weights', data=bar_df, color='#332288', alpha=0.9,
+                    order=np.sort(df['cluster_cat'].unique()))
     # plt.xticks(rotation=30)
     plt.ylabel('count', fontsize=12, labelpad=10)
     plt.xlabel('clusters', fontsize=12, labelpad=10)
@@ -98,7 +108,7 @@ def plot_clustercount(df, output_path=None, savefig_kws=None):
     savefig(output_path=output_path, savefig_kws=savefig_kws)
 
 
-def plot_cluster_means_to_global_means_comparison(df, dimensions, xlabel=None, ylabel=None,
+def plot_cluster_means_to_global_means_comparison(df, dimensions, weights=None, xlabel=None, ylabel=None,
                                                   levels=[-0.50, -0.32, -0.17, -0.05, 0.05, 0.17, 0.32, 0.50],
                                                   data_standardized=False, output_path=None, savefig_kws=None):
     """
@@ -111,6 +121,8 @@ def plot_cluster_means_to_global_means_comparison(df, dimensions, xlabel=None, y
     dimensions : list
         List of variables of interest.
         *Note these must be internal variables, ie, variables used for clustering*
+    weights: `np.array`, default=None
+        Sample weights.
     xlabel : str, default=None
         x-label name/description.
     ylabel : str, default=None
@@ -125,7 +137,7 @@ def plot_cluster_means_to_global_means_comparison(df, dimensions, xlabel=None, y
     savefig_kws : dict, default=None
         Save figure options.
     """
-    df_diff = compare_cluster_means_to_global_means(df, dimensions, data_standardized=data_standardized)
+    df_diff = compare_cluster_means_to_global_means(df, dimensions, weights, data_standardized=data_standardized)
     colors = sns.color_palette("BrBG", n_colors=9)
     cmap, norm = matplotlib.colors.from_levels_and_colors(levels, colors, extend="both")
     width = min(len(dimensions), 20)
@@ -215,7 +227,7 @@ def plot_distribution_by_cluster(df, cluster_labels, xlabel=None, ylabel=None, s
     savefig(output_path=output_path, savefig_kws=savefig_kws)
 
 
-def plot_clusters_2D(x, y, hue, df, style_kwargs=dict(), output_path=None, savefig_kws=None):
+def plot_clusters_2D(x, y, hue, df, weights=None, style_kwargs=dict(), output_path=None, savefig_kws=None):
     """
     Plots two 2D plots:
      - A scatter plot styled by the categorical variable `hue`.
@@ -231,10 +243,13 @@ def plot_clusters_2D(x, y, hue, df, style_kwargs=dict(), output_path=None, savef
         Array with categorical values to be used for color styling.
     df : `pandas.DataFrame`
         DataFrame containing the data.
+    weights : `numpy.array`, default=None
+        Sample weights
     style_kwargs : dict, default=empty dict
         Dictionary with optional styling parameters.
         List of parameters:
          - palette : matplotlib palette to be used. default='gnuplot'
+         - alpha : the alpha blending value, between 0 (transparent) and 1 (opaque). default=0.3
          - vline_color : color to be used for vertical line (used for plotting x mean value). default='#11A579'
          - hline_color : color to be used for horizontal line (used for plotting y mean value). default='#332288'
          - kdeplot : boolean to display density area of points (using seabonr.kdeplot). default=True
@@ -247,6 +262,10 @@ def plot_clusters_2D(x, y, hue, df, style_kwargs=dict(), output_path=None, savef
     palette = 'gnuplot'
     if style_kwargs.get('palette'):
         palette = style_kwargs.get('palette')
+
+    alpha = 0.3
+    if style_kwargs.get('alpha'):
+        alpha = style_kwargs.get('alpha')
 
     vline_color = '#11A579'
     if style_kwargs.get('vline_color'):
@@ -262,18 +281,28 @@ def plot_clusters_2D(x, y, hue, df, style_kwargs=dict(), output_path=None, savef
 
     fig, axs = plt.subplots(1, 2, figsize=(14, 5), sharey=True, sharex=True)
 
+    xmean = df[x].mean()
+    xmean_label= f'Mean {x}'
+    if weights is not None:
+        xmean = weighted_mean(df[x], weights)
+        xmean_label = f'W. Mean {x}'
     x_range = df[x].max() - df[x].min()
     xmin = df[x].min() - x_range * 0.05
     xmax = df[x].max() + x_range * 0.05
+
+    ymean = df[y].mean()
+    ymean_label = f'Mean {y}'
+    if weights is not None:
+        ymean = weighted_mean(df[y], weights)
+        ymean_label = f'W. Mean {y}'
     y_range = df[y].max() - df[y].min()
     ymin = df[y].min() - y_range * 0.05
     ymax = df[y].max() + y_range * 0.05
 
     # Left-hand side plot: Scatter plot colored by cluster category
-    sns.scatterplot(x=x, y=y, hue=hue, data=df.sort_values(hue), alpha=0.3, palette=palette, linewidth=0, ax=axs[0])
-    axs[0].vlines(df[x].mean(), ymin=ymin, ymax=ymax, color=vline_color, linewidth=1.15, linestyles='--', label=f'Mean {x}')
-    axs[0].hlines(df[y].mean(), xmin=xmin, xmax=xmax, color=hline_color, linewidth=1.15, linestyles='--',
-                  label=f'Mean {y}')
+    sns.scatterplot(x=x, y=y, hue=hue, data=df.sort_values(hue), alpha=alpha, palette=palette, linewidth=0, ax=axs[0])
+    axs[0].vlines(xmean, ymin=ymin, ymax=ymax, color=vline_color, linewidth=1.15, linestyles='--', label=xmean_label)
+    axs[0].hlines(ymean, xmin=xmin, xmax=xmax, color=hline_color, linewidth=1.15, linestyles='--', label=ymean_label)
     axs[0].set_xlabel(x, fontsize=12)
     axs[0].set_ylabel(y, fontsize=12)
     axs[0].set_title('Scatter plot by cluster', fontsize=13)
@@ -281,17 +310,23 @@ def plot_clusters_2D(x, y, hue, df, style_kwargs=dict(), output_path=None, savef
     axs[0].set_ylim(ymin, ymax)
 
     # Right-hand side plot: Cluster centroids with optional kernel density area
-    sns.scatterplot(x=x, y=y, hue=hue, data=df.groupby(hue).mean().reset_index(),
+
+    agg_method = 'mean'
+    if weights is not None:
+        def wmean(v): return weighted_mean(v, weights[v.index])
+        agg_method = wmean
+    scatter_df = df.groupby(hue).agg(dict(zip([x, y], [agg_method] * 2))).reset_index()
+
+    sns.scatterplot(x=x, y=y, hue=hue, data=scatter_df,
                     alpha=1, palette=palette, linewidth=0, marker='X', s=100, ax=axs[1])
 
     if kdeplot:
-        sns.kdeplot(x=x, y=y, hue=hue, data=df.sort_values(hue), levels=1, alpha=0.2, palette=palette,
-                    ax=axs[1])
+        hue_order = np.sort(df[hue].values)
+        sns.kdeplot(x=x, y=y, hue=hue, data=df, levels=1, alpha=0.2, palette=palette,
+                    weights=weights, hue_order=hue_order, ax=axs[1])
 
-    axs[1].vlines(df[x].mean(), ymin=ymin, ymax=ymax, color=vline_color, linewidth=1, linestyles='--',
-                  label=f'Mean {x}')
-    axs[1].hlines(df[y].mean(), xmin=xmin, xmax=xmax, color=hline_color, linewidth=1, linestyles='--',
-                  label=f'Mean {y}')
+    axs[1].vlines(xmean, ymin=ymin, ymax=ymax, color=vline_color, linewidth=1, linestyles='--', label=xmean_label)
+    axs[1].hlines(ymean, xmin=xmin, xmax=xmax, color=hline_color, linewidth=1, linestyles='--', label=ymean_label)
     axs[1].set_xlabel(x, fontsize=12)
     axs[1].set_ylabel(y, fontsize=12)
     axs[1].set_title('Cluster centroids', fontsize=13)
