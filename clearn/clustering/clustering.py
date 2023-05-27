@@ -231,6 +231,8 @@ class Clustering:
         if not isinstance(cluster_filter, list):
             cluster_filter = [cluster_filter]
 
+        if not isinstance(statistics, list):
+            statistics = [statistics]
         if 'wmean' in statistics:
             def wmean(x): return weighted_mean(x, self.weights_[x.index])
             statistics[statistics.index('wmean')] = wmean
@@ -393,7 +395,7 @@ class Clustering:
         dict : dictionary
             Dictionary with the corresponding test statistics.
         """
-        contingency_t = self.describe_clusters_cat(cat_array)
+        contingency_t = self.describe_clusters_cat(cat_array, '')
         test_res = chi2_contingency(contingency_t.values)
         return dict(zip(['chi2', 'p', 'dof'], test_res[:-1]))
 
@@ -450,12 +452,9 @@ class Clustering:
         savefig_kws : dict, default=None
             Save figure options.
         """
-        if use_weights:
-            plot_clustercount(self.df, self.weights_, output_path, savefig_kws)
-        else:
-            plot_clustercount(self.df, output_path, savefig_kws)
+        plot_clustercount(self.df, self.weights_, output_path, savefig_kws)
 
-    def plot_cluster_means_to_global_means_comparison(self, use_weights= False, df_original=None, xlabel=None, ylabel=None,
+    def plot_cluster_means_to_global_means_comparison(self, use_weights=False, df_original=None, xlabel=None, ylabel=None,
                                                       levels=[-0.50, -0.32, -0.17, -0.05, 0.05, 0.17, 0.32, 0.50],
                                                       output_path=None, savefig_kws=None):
         """
@@ -579,7 +578,7 @@ class Clustering:
         plot_clusters_2D(coor1, coor2, hue, df_ext, weights, style_kwargs=style_kwargs, output_path=output_path,
                          savefig_kws=savefig_kws)
 
-    def plot_cat_distribution_by_cluster(self, cat_array, cat_label=None, cluster_label=None, output_path=None,
+    def plot_cat_distribution_by_cluster(self, cat_array, cat_label, cluster_label=None, output_path=None,
                                          savefig_kws=None):
         """
         Plots the relative contingency table of the clusters with a categorical variable as a stacked bar plot.
@@ -598,5 +597,5 @@ class Clustering:
         savefig_kws : dict, default=None
             Save figure options.
         """
-        ct = self.describe_clusters_cat(cat_array, normalize=True)
+        ct = self.describe_clusters_cat(cat_array, cat_label, normalize=True)
         plot_cat_distribution_by_cluster(ct, cat_label, cluster_label, output_path, savefig_kws)

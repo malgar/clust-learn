@@ -138,7 +138,7 @@ def plot_cluster_means_to_global_means_comparison(df, dimensions, weights=None, 
         Save figure options.
     """
     df_diff = compare_cluster_means_to_global_means(df, dimensions, weights, data_standardized=data_standardized)
-    colors = sns.color_palette("BrBG", n_colors=9)
+    colors = sns.color_palette("BrBG", n_colors=len(levels)+1)
     cmap, norm = matplotlib.colors.from_levels_and_colors(levels, colors, extend="both")
     width = min(len(dimensions), 20)
     height = min(df['cluster'].nunique(), 8)
@@ -321,7 +321,7 @@ def plot_clusters_2D(x, y, hue, df, weights=None, style_kwargs=dict(), output_pa
                     alpha=1, palette=palette, linewidth=0, marker='X', s=100, ax=axs[1])
 
     if kdeplot:
-        hue_order = np.sort(df[hue].values)
+        hue_order = np.sort(df[hue].unique())
         sns.kdeplot(x=x, y=y, hue=hue, data=df, levels=1, alpha=0.2, palette=palette,
                     weights=weights, hue_order=hue_order, ax=axs[1])
 
