@@ -1,6 +1,6 @@
 [project]
 name = "clust-learn"
-version = "0.2.0"
+version = "0.2.0b"
 authors = [
   { name="Miguel Alvarez-Garcia", email="malvarez.statistics@gmail.com" },
 ]
