@@ -79,7 +79,7 @@ class Clustering:
             self.instances_[algorithm].fit(self.df[self.dimensions_], sample_weight=weights)
         else:
             self.instances_[algorithm].fit(self.df[self.dimensions_])
-        self.labels_ = self.instances_[algorithm].labels_
+        self.labels_ = self.instances_[algorithm].predict(self.df[self.dimensions_])
 
     def _compute_optimal_clustering_config(self, metric, cluster_range, weights=None):
         optimal_list = []
@@ -93,21 +93,25 @@ class Clustering:
 
                 if metric == 'inertia':
                     self.scores_[algorithm].append(
-                        weighted_sum_of_squared_distances(self.df[self.dimensions_], self.instances_[algorithm].labels_,
+                        weighted_sum_of_squared_distances(self.df[self.dimensions_],
+                                                          self.instances_[algorithm].predict(self.df[self.dimensions_]),
                                                           weights))
                 elif metric == 'davies_bouldin_score':
                     self.scores_[algorithm].append(
                         1 if nc == 1 else davies_bouldin_score(self.df[self.dimensions_],
-                                                               self.instances_[algorithm].labels_))
+                                                               self.instances_[algorithm].predict(
+                                                                   self.df[self.dimensions_])))
                 elif metric == 'silhouette_score':
                     self.scores_[algorithm].append(
                         0 if nc == 1 else silhouette_score(self.df[self.dimensions_],
-                                                           self.instances_[algorithm].labels_))
+                                                           self.instances_[algorithm].predict(
+                                                               self.df[self.dimensions_])))
 
                 elif metric == 'calinski_harabasz_score':
                     self.scores_[algorithm].append(
                         1 if nc == 1 else calinski_harabasz_score(self.df[self.dimensions_],
-                                                                  self.instances_[algorithm].labels_))
+                                                                  self.instances_[algorithm].predict(
+                                                                      self.df[self.dimensions_])))
 
             if len(range(*cluster_range)) > 1:
                 kl = KneeLocator(x=range(*cluster_range), y=self.scores_[algorithm], curve='convex',

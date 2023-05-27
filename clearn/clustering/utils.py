@@ -82,7 +82,7 @@ def weighted_std(data, weights=None):
 
 
 def is_sklearn_compatible(algorithm):
-    return 'fit' in dir(algorithm) and 'set_params' in dir(algorithm)
+    return 'fit' in dir(algorithm) and 'set_params' in dir(algorithm) and 'predict' in dir(algorithm)
 
 
 def accepts_param(function, param):
