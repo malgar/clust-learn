@@ -55,7 +55,7 @@ class Clustering:
         self.algorithms = list()
 
         self.instances_ = dict()
-        for algorithm in self.algorithms:
+        for algorithm in algorithms:
             if is_sklearn_compatible(algorithm):
                 self.algorithms.append(str(algorithm))
                 self.instances_[self.algorithms[-1]] = algorithm
