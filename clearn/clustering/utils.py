@@ -1,6 +1,7 @@
 """Utils for clustering"""
 # Author: Miguel Alvarez-Garcia
 
+import inspect
 import numpy as np
 import pandas as pd
 
@@ -78,3 +79,12 @@ def weighted_std(data, weights=None):
     average = np.average(data, weights=weights)
     variance = np.average((data-average)**2, weights=weights)
     return np.sqrt(variance)
+
+
+def is_sklearn_compatible(algorithm):
+    return 'fit' in dir(algorithm) and 'set_params' in dir(algorithm)
+
+
+def accepts_param(function, param):
+    args, varargs, varkw, defaults, kwonlyargs, kwonlydefaults, annotations = inspect.getfullargspec(function)
+    return param in args

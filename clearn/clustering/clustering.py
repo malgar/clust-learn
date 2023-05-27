@@ -17,8 +17,6 @@ __metrics__ = ['inertia', 'davies_bouldin_score', 'silhouette_score', 'calinski_
 METRIC_NAMES = dict(zip(__metrics__,
                         ['Weighted Sum of Squared Distances', 'Davies Bouldin Score', 'Silhouette Score',
                          'Calinski and Harabasz score']))
-KMEANS = ['kmeans', 'kmeans++']
-HIERARCHICAL_WARD = ['ward', 'hierarchical', 'agglomerative']
 
 
 class Clustering:
@@ -29,8 +27,8 @@ class Clustering:
     ----------
     df : `pandas:DatasFrame`
         DataFrame with main data
-    algorithms : str or list, default='kmeans'
-        Algorithm/s to be used for clustering.
+    algorithms : instance or list of instances, default=None
+        Algorithm instances to be used for clustering. They must implement the `fit` and `set_params` methods.
         By default, [K-Means++](https://scikit-learn.org/stable/modules/clustering.html#k-means)
     normalize : bool, default=True
         Whether to apply data normalization for fair comparisons between variables. By default it is applied. In case
@@ -38,7 +36,7 @@ class Clustering:
     """
     def __init__(self,
                  df,
-                 algorithms='kmeans',
+                 algorithms=None,
                  normalize=True):
 
         # Normalize variables for fair comparisons
@@ -50,19 +48,19 @@ class Clustering:
 
         self.dimensions_ = list(df.columns)
 
+        if algorithms is None:
+            algorithms = [KMeans(random_state=42)]
         if not isinstance(algorithms, list):
             algorithms = [algorithms]
-        self.algorithms = list(map(str.lower, algorithms))
+        self.algorithms = list()
 
         self.instances_ = dict()
         for algorithm in self.algorithms:
-            if algorithm in KMEANS:
-                self.instances_[algorithm] = KMeans(random_state=42)
-            elif algorithm in HIERARCHICAL_WARD:
-                self.instances_[algorithm] = AgglomerativeClustering()
+            if is_sklearn_compatible(algorithm):
+                self.algorithms.append(str(algorithm))
+                self.instances_[self.algorithms[-1]] = algorithm
             else:
-                raise RuntimeWarning(f'''Algorithm {algorithm} is not supported.
-                                     Supported algorithms are: KMeans and Hierarchical clustering''')
+                raise RuntimeWarning(f'Algorithm {str(algorithm)} does not comply with scikit-learn standard')
 
         self.scores_ = dict()
         self._initialize_scores()
@@ -73,12 +71,11 @@ class Clustering:
 
     def _initialize_scores(self):
         for algorithm in self.algorithms:
-            if algorithm in KMEANS + HIERARCHICAL_WARD:
-                self.scores_[algorithm] = []
+            self.scores_[algorithm] = []
 
     def _compute_clusters(self, algorithm, n_clusters, weights=None):
         self.instances_[algorithm].set_params(n_clusters=n_clusters)
-        if algorithm in KMEANS and weights is not None:
+        if accepts_param(self.instances_[algorithm].fit, 'sample_weight'):
             self.instances_[algorithm].fit(self.df[self.dimensions_], sample_weight=weights)
         else:
             self.instances_[algorithm].fit(self.df[self.dimensions_])
@@ -89,9 +86,7 @@ class Clustering:
         for algorithm in self.algorithms:
             for nc in range(*cluster_range):
                 self.instances_[algorithm].set_params(n_clusters=nc)
-
-                # TODO: When module is generalized to accept any algorithm, use inspect package with `getfullargspec()`
-                if algorithm in KMEANS and weights is not None:
+                if accepts_param(self.instances_[algorithm].fit, 'sample_weight'):
                     self.instances_[algorithm].fit(self.df[self.dimensions_], sample_weight=weights)
                 else:
                     self.instances_[algorithm].fit(self.df[self.dimensions_])
