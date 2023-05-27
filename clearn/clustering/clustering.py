@@ -66,6 +66,7 @@ class Clustering:
         self._initialize_scores()
 
         self.metric_ = 'inertia'
+        self.labels_ = None
         self.optimal_config_ = None
         self.weights_ = None
 
@@ -74,44 +75,40 @@ class Clustering:
             self.scores_[algorithm] = []
 
     def _compute_clusters(self, algorithm, n_clusters, weights=None):
-        self.instances_[algorithm].set_params(n_clusters=n_clusters)
-        if accepts_param(self.instances_[algorithm].fit, 'sample_weight'):
-            self.instances_[algorithm].fit(self.df[self.dimensions_], sample_weight=weights)
+        n_clusters_param_name = get_n_clusters_param_name(self.instances_[algorithm])
+        self.instances_[algorithm].set_params(**{n_clusters_param_name: n_clusters})
+        if accepts_param(self.instances_[algorithm].fit_predict, 'sample_weight'):
+            self.labels_ = self.instances_[algorithm].fit_predict(self.df[self.dimensions_], sample_weight=weights)
         else:
-            self.instances_[algorithm].fit(self.df[self.dimensions_])
-        self.labels_ = self.instances_[algorithm].predict(self.df[self.dimensions_])
+            self.labels_ = self.instances_[algorithm].fit_predict(self.df[self.dimensions_])
 
     def _compute_optimal_clustering_config(self, metric, cluster_range, weights=None):
         optimal_list = []
         for algorithm in self.algorithms:
+            n_clusters_param_name = get_n_clusters_param_name(self.instances_[algorithm])
             for nc in range(*cluster_range):
-                self.instances_[algorithm].set_params(n_clusters=nc)
-                if accepts_param(self.instances_[algorithm].fit, 'sample_weight'):
-                    self.instances_[algorithm].fit(self.df[self.dimensions_], sample_weight=weights)
+                self.instances_[algorithm].set_params(**{n_clusters_param_name: nc})
+
+                local_labels = None
+                if accepts_param(self.instances_[algorithm].fit_predict, 'sample_weight'):
+                    local_labels = self.instances_[algorithm].fit_predict(self.df[self.dimensions_],
+                                                                          sample_weight=weights)
                 else:
-                    self.instances_[algorithm].fit(self.df[self.dimensions_])
+                    local_labels = self.instances_[algorithm].fit_predict(self.df[self.dimensions_])
 
                 if metric == 'inertia':
                     self.scores_[algorithm].append(
-                        weighted_sum_of_squared_distances(self.df[self.dimensions_],
-                                                          self.instances_[algorithm].predict(self.df[self.dimensions_]),
-                                                          weights))
+                        weighted_sum_of_squared_distances(self.df[self.dimensions_], local_labels, weights))
                 elif metric == 'davies_bouldin_score':
                     self.scores_[algorithm].append(
-                        1 if nc == 1 else davies_bouldin_score(self.df[self.dimensions_],
-                                                               self.instances_[algorithm].predict(
-                                                                   self.df[self.dimensions_])))
+                        1 if nc == 1 else davies_bouldin_score(self.df[self.dimensions_], local_labels))
                 elif metric == 'silhouette_score':
                     self.scores_[algorithm].append(
-                        0 if nc == 1 else silhouette_score(self.df[self.dimensions_],
-                                                           self.instances_[algorithm].predict(
-                                                               self.df[self.dimensions_])))
+                        0 if nc == 1 else silhouette_score(self.df[self.dimensions_], local_labels))
 
                 elif metric == 'calinski_harabasz_score':
                     self.scores_[algorithm].append(
-                        1 if nc == 1 else calinski_harabasz_score(self.df[self.dimensions_],
-                                                                  self.instances_[algorithm].predict(
-                                                                      self.df[self.dimensions_])))
+                        1 if nc == 1 else calinski_harabasz_score(self.df[self.dimensions_], local_labels))
 
             if len(range(*cluster_range)) > 1:
                 kl = KneeLocator(x=range(*cluster_range), y=self.scores_[algorithm], curve='convex',
@@ -582,8 +579,8 @@ class Clustering:
         plot_clusters_2D(coor1, coor2, hue, df_ext, weights, style_kwargs=style_kwargs, output_path=output_path,
                          savefig_kws=savefig_kws)
 
-    def plot_cat_distribution_by_cluster(self, cat_array, cat_label, cluster_label=None, output_path=None,
-                                         savefig_kws=None):
+    def plot_cat_distribution_by_cluster(self, cat_array, cat_label, cluster_label=None, use_weights=False,
+                                         output_path=None, savefig_kws=None):
         """
         Plots the relative contingency table of the clusters with a categorical variable as a stacked bar plot.
 
@@ -596,10 +593,12 @@ class Clustering:
             Name/Description of the categorical variable to be displayed.
         cluster_label : str, default=None
             Name/Description of the cluster variable to be displayed.
+        use_weights : bool, default=False
+            Whether to use weights for centroid comparison.
         output_path : str, default=None
             Path to save figure as image.
         savefig_kws : dict, default=None
             Save figure options.
         """
-        ct = self.describe_clusters_cat(cat_array, cat_label, normalize=True)
+        ct = self.describe_clusters_cat(cat_array, cat_label, normalize=True, use_weights=use_weights)
         plot_cat_distribution_by_cluster(ct, cat_label, cluster_label, output_path, savefig_kws)

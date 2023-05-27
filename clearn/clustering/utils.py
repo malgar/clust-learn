@@ -82,9 +82,19 @@ def weighted_std(data, weights=None):
 
 
 def is_sklearn_compatible(algorithm):
-    return 'fit' in dir(algorithm) and 'set_params' in dir(algorithm) and 'predict' in dir(algorithm)
+    return 'fit_predict' in dir(algorithm) and 'set_params' in dir(algorithm)
 
 
 def accepts_param(function, param):
     args, varargs, varkw, defaults, kwonlyargs, kwonlydefaults, annotations = inspect.getfullargspec(function)
     return param in args
+
+
+def get_n_clusters_param_name(algorithm):
+    param_list = list(algorithm.get_params().keys())
+    if 'n_clusters' in param_list:
+        return 'n_clusters'
+    elif 'n_components' in param_list:
+        return 'n_components'
+    else:
+        return None
