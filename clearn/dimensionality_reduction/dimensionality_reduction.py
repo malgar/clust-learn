@@ -177,7 +177,7 @@ class DimensionalityReduction:
         explained_variance_ratio = self._get_explained_variance_ratio()
         if n_components_cat is None and self.min_explained_variance_ratio_ is None:
             # Optimal number
-            kl = KneeLocator(x=range(1, df.nunique().sum() + 1),
+            kl = KneeLocator(x=range(1, df.nunique().sum()),
                              y=explained_variance_ratio,
                              curve='convex',
                              direction='decreasing')
