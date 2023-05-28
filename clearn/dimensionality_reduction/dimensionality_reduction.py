@@ -1,6 +1,7 @@
 """Dimensionality Reduction with PCA as reference"""
 # Author: Miguel Alvarez-Garcia
 
+import numpy as np
 import prince
 
 from sklearn.decomposition import PCA, SparsePCA
@@ -172,7 +173,7 @@ class DimensionalityReduction:
         self.cat_model.set_params(n_components=df.nunique().sum())
         self.cat_model.fit(df.astype(str))
 
-        explained_variance_ratio = self.cat_model.explained_inertia_ / self.cat_model.explained_inertia_.sum()
+        explained_variance_ratio = self.cat_model.explained_inertia_ / np.sum(self.cat_model.explained_inertia_)
         if n_components_cat is None and self.min_explained_variance_ratio_ is None:
             # Optimal number
             kl = KneeLocator(x=range(1, df.nunique().sum() + 1),
@@ -319,7 +320,7 @@ class DimensionalityReduction:
         savefig_kws : dict, default=None
             Save figure options.
         """
-        explained_variance_ratio = self.cat_model.explained_inertia_ / self.cat_model.explained_inertia_.sum()
+        explained_variance_ratio = self.cat_model.explained_inertia_ / np.sum(self.cat_model.explained_inertia_)
         plot_explained_variance(explained_variance_ratio, thres, plots, output_path, savefig_kws)
 
     def plot_num_main_contributors(self, thres=0.5, n_contributors=5, dim_idx=None, output_path=None, savefig_kws=None):
