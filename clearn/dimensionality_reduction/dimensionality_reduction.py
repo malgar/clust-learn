@@ -7,6 +7,7 @@ import prince
 from sklearn.decomposition import PCA, SparsePCA
 from sklearn.preprocessing import StandardScaler
 from .table_utils import *
+from .utils import *
 from .viz_utils import *
 
 
@@ -173,7 +174,7 @@ class DimensionalityReduction:
         self.cat_model.set_params(n_components=df.nunique().sum())
         self.cat_model.fit(df.astype(str))
 
-        explained_variance_ratio = self.cat_model.explained_inertia_ / np.sum(self.cat_model.explained_inertia_)
+        explained_variance_ratio = self._get_explained_variance_ratio()
         if n_components_cat is None and self.min_explained_variance_ratio_ is None:
             # Optimal number
             kl = KneeLocator(x=range(1, df.nunique().sum() + 1),
@@ -192,6 +193,12 @@ class DimensionalityReduction:
         idx_positions = np.maximum(2, len(str(n_components_cat)))
         trans.columns = [f'dim_{str(i+1).zfill(idx_positions)}' for i in range(n_components_cat)]
         return trans
+
+    # We need to (temporarily) do this manually because prince is no longer applying these corrections with MCA
+    def _get_explained_variance_ratio(self):
+        benzecri_eigenvalues = apply_benzecri_eigenvalue_correction(self.cat_model.eigenvalues_, self.cat_model.K_)
+        greenacre_inertia = compute_greenacre_inertia(self.cat_model.eigenvalues_, self.cat_model.K_, self.cat_model.J_)
+        return benzecri_eigenvalues / greenacre_inertia
 
     def num_main_contributors(self, thres=0.5, n_contributors=None, dim_idx=None, component_description=None,
                               col_description=None, output_path=None):
@@ -320,7 +327,7 @@ class DimensionalityReduction:
         savefig_kws : dict, default=None
             Save figure options.
         """
-        explained_variance_ratio = self.cat_model.explained_inertia_ / np.sum(self.cat_model.explained_inertia_)
+        explained_variance_ratio = self._get_explained_variance_ratio()
         plot_explained_variance(explained_variance_ratio, thres, plots, output_path, savefig_kws)
 
     def plot_num_main_contributors(self, thres=0.5, n_contributors=5, dim_idx=None, output_path=None, savefig_kws=None):
