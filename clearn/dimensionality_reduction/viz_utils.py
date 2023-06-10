@@ -236,7 +236,7 @@ def plot_cat_main_contributor_distribution(df, df_trans, thres=0.14, n_contribut
 
         i = 0
         ax0 = None
-        for v in df[var_name].unique():
+        for v in np.sort(df[var_name].unique()):
             ax = fig.add_subplot(gs[i:i + int(nrows / nvalues), j], sharex=ax0, sharey=ax0)
             sns.kdeplot(data=df[df[var_name] == v], x=dim_name, color='blue', fill=True, ax=ax)
             ax.set_title(f'{var_name} = {v}', fontsize=10)
