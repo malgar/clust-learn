@@ -102,8 +102,8 @@ def plot_imputation_distribution_assessment(df_prior, df_posterior, imputed_vars
     i = 0
     for ivar in imputed_vars:
         ax = get_axis(i, axs, ncols, nrows)
-        sns.kdeplot(ivar, data=df_prior_sample, label='Before imputation', ax=ax, **prior_kws)
-        sns.kdeplot(ivar, data=df_posterior.loc[df_prior_sample.index], label='After imputation', ax=ax,
+        sns.kdeplot(x=ivar, data=df_prior_sample, label='Before imputation', ax=ax, **prior_kws)
+        sns.kdeplot(x=ivar, data=df_posterior.loc[df_prior_sample.index], label='After imputation', ax=ax,
                     **posterior_kws)
         ax.legend()
         i += 1

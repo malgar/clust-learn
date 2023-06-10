@@ -212,7 +212,8 @@ def plot_distribution_by_cluster(df, cluster_labels, xlabel=None, ylabel=None, s
         sns.violinplot(y=df[col], x=cluster_labels, linewidth=1, ax=ax)
         plt.setp(ax.collections, alpha=.4)
         sns.boxplot(y=df[col], x=cluster_labels, width=0.2, linewidth=1, color='grey', ax=ax)
-        sns.stripplot(y=df[col], x=cluster_labels, alpha=0.7, size=3, ax=ax)
+        sns.stripplot(y=df[col], x=cluster_labels, hue=list(map(str,cluster_labels)), alpha=0.5, size=3, ax=ax,
+                      legend=None)
         ax.set_ylabel(col if ylabel is None else ylabel, fontsize=12, labelpad=15)
         if i // ncols == nrows-1:
             ax.set_xlabel('cluster' if xlabel is None else xlabel, fontsize=12, labelpad=15)
