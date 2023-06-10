@@ -393,7 +393,7 @@ cl = Clustering(df, algorithms='kmeans', normalize=False)
 | Parameter | Type | Description |
 |:-|:-|:-|
 | `df` | `pandas.DataFrame` | Data frame containing the data to be clustered |
-| `algorithms` | `string` or `list` | Algorithms to be used for clustering. The current version supports k-means and agglomerative clustering |
+| `algorithms` | instance or `list` of instances | Algorithm instances to be used for clustering. They must implement the `fit` and `set_params` methods |
 | `normalize` | `bool` | Whether to apply data normalization for fair comparisons between variables. In case dimensionality reduction is applied beforehand, normalization should not be applied |
 | **Attribute** | **Type** | **Description** |
 | `dimensions_` | `list` | List of columns of they input data frame |
@@ -441,7 +441,7 @@ describe_clusters_cat()
 [Source](https://github.com/malgar/clust-learn/blob/be4a2238670af01023bd419a0f8adaa7f9cee9f6/clearn/clustering/clustering.py#L237)
 
 ```
-describe_clusters_cat(self, cat_array, cat_name=None, order=None, normalize=False, output_path=None)
+describe_clusters_cat(self, cat_array, cat_name, order=None, normalize=False, use_weights=False, output_path=None)
 ```
 
 Describes clusters based on  external *categorical* variables. The result is a contingency table.
@@ -503,7 +503,7 @@ Plots the normalized curve used for computing the optimal number of clusters.
 [Source](https://github.com/malgar/clust-learn/blob/be4a2238670af01023bd419a0f8adaa7f9cee9f6/clearn/clustering/clustering.py#L419)
 
 ```
-plot_clustercount(self, output_path=None, savefig_kws=None)
+plot_clustercount(self, use_weights=False, output_path=None, savefig_kws=None)
 ```
 
 Plots a bar plot with cluster counts.
@@ -513,7 +513,7 @@ Plots a bar plot with cluster counts.
 [Source](https://github.com/malgar/clust-learn/blob/be4a2238670af01023bd419a0f8adaa7f9cee9f6/clearn/clustering/clustering.py#L432)
 
 ```
-plot_cluster_means_to_global_means_comparison(self, df_original=None, xlabel=None, ylabel=None,
+plot_cluster_means_to_global_means_comparison(self, use_weights= False, df_original=None, xlabel=None, ylabel=None,
                                               levels=[-0.50, -0.32, -0.17, -0.05, 0.05, 0.17, 0.32, 0.50],
                                               output_path=None, savefig_kws=None)
 ```
@@ -535,7 +535,7 @@ Plots the violin plots per cluster and *continuous* variables of interest to und
 [Source](https://github.com/malgar/clust-learn/blob/be4a2238670af01023bd419a0f8adaa7f9cee9f6/clearn/clustering/clustering.py#L498)
 
 ```
-plot_clusters_2D(self, coor1, coor2, style_kwargs=dict(), output_path=None, savefig_kws=None)
+plot_clusters_2D(self, coor1, coor2, use_weights=False, style_kwargs=dict(), output_path=None, savefig_kws=None)
 ```
 
 Plots two 2D plots:
@@ -547,7 +547,7 @@ Plots two 2D plots:
 [Source](https://github.com/malgar/clust-learn/blob/be4a2238670af01023bd419a0f8adaa7f9cee9f6/clearn/clustering/clustering.py#L545)
 
 ```
-plot_cat_distribution_by_cluster(self, cat_array, cat_label=None, cluster_label=None, output_path=None, savefig_kws=None)
+plot_cat_distribution_by_cluster(self, cat_array, cat_label, cluster_label=None, use_weights=False, output_path=None, savefig_kws=None)
 ```
 
 Plots the relative contingency table of the clusters with a categorical variable as a stacked bar plot.
