@@ -61,7 +61,7 @@ explainability strategies.
 
 <br/>
 
-![clust-learn package structure](https://github.com/malgar/clust-learn/blob/v0.0.8/images/package_structure.png?raw=true)
+![clust-learn package structure](https://github.com/malgar/clust-learn/blob/master/images/package_structure.png?raw=true)
 
 <br/>
 
