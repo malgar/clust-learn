@@ -9,7 +9,7 @@ with open(os.path.join(ROOT, 'README.md')) as f:
 
 setup(
     name='clust-learn',
-    version="0.2.1",
+    version="0.2.2",
     description="A Python package for explainable cluster analysis",
     long_description=README,
     long_description_content_type="text/markdown",
