@@ -27,6 +27,7 @@ setup(
     ],
     license='GPLv3',
     install_requires=[
+	    "imbalanced-learn>=0.10.0",
         "kneed>=0.7.0",
         "matplotlib>=3.4.3",
         "networkx>=2.6.3",

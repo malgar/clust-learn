@@ -4,6 +4,7 @@
 import logging
 import numpy as np
 
+from imblearn.over_sampling import SMOTE
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report, confusion_matrix
 from sklearn.model_selection import train_test_split
@@ -38,6 +39,7 @@ class Classifier:
         self.cat_vars = cat_cols
         self.filtered_features_ = None
         self.target = target
+        self.labels_ = list(np.sort(np.unique(self.target)))
         self.model_ = None
         self.X_train_, self.X_test_, self.y_train_, self.y_test_ = tuple([None]*4)
         self.grid_result_ = None
@@ -51,7 +53,7 @@ class Classifier:
 
     def train_model(self, model=None, feature_selection=True, features_to_keep=[],
                     feature_selection_model=None, hyperparameter_tuning=False, param_grid=None,
-                    train_size=0.8):
+                    train_size=0.8, balance_classes=False):
         """
         This method trains a classification model.
 
@@ -90,22 +92,27 @@ class Classifier:
             needed.
         train_size : float, default=0.8
             Size of the train split of the data for model training.
+        balance_classes : booelan, default=False
+            Optional to balance classes using SMOTE
         """
         # Data is split into train and test sets
         X = self.df[self.original_features]
-        y = self.target
+        y = range(len(self.target))
         self.X_train_, self.X_test_, self.y_train_, self.y_test_ = train_test_split(X, y, train_size=train_size)
+
+        if balance_classes:
+            oversample = SMOTE()
+            self.X_train_, self.y_train_ = oversample.fit_resample(self.X_train_, self.y_train_)
 
         # Feature selection
         if feature_selection:
             self.logger.info('Running feature selection...')
             if feature_selection_model is None:
-                min_samples_leaf = int(np.ceil(self.X_train_.shape[0] * 0.05))
+                min_samples_leaf = max(10, int(np.ceil(self.X_train_.shape[0] * 0.05) / len(self.labels_)))
                 feature_selection_model = RandomForestClassifier(max_depth=10,  min_samples_leaf=min_samples_leaf,
                                                                  random_state=42)
 
-            self.filtered_features_ = run_feature_selection(self.df.loc[self.X_train_.index], self.original_features,
-                                                            self.target.loc[self.X_train_.index],
+            self.filtered_features_ = run_feature_selection(self.X_train_, self.original_features, self.y_train_,
                                                             feature_selection_model, self.num_vars, self.cat_vars,
                                                             features_to_keep)
 
@@ -179,8 +186,8 @@ class Classifier:
         y = self.y_test_ if test else self.y_train_
 
         cm = pd.DataFrame(confusion_matrix(y, self.model_.predict(X)),
-                          columns=pd.MultiIndex.from_product([['Predicted values'], np.unique(self.target)]),
-                          index=pd.MultiIndex.from_product([['Observed values'], np.unique(self.target)]))
+                          columns=pd.MultiIndex.from_product([['Predicted values'], self.labels_]),
+                          index=pd.MultiIndex.from_product([['Observed values'], self.labels_]))
 
         if sum_stats:
             # Precision, recall, and global accuracy are appended to the table
@@ -259,8 +266,8 @@ class Classifier:
         savefig_kws : dict, default=None
             Save figure options.
         """
-        plot_shap_importances_beeswarm(self.model_, self.X_train_, class_id, n_top=n_top, output_path=output_path,
-                                       savefig_kws=savefig_kws)
+        plot_shap_importances_beeswarm(self.model_, self.X_train_, class_id, self.labels_[class_id], n_top=n_top,
+                                       output_path=output_path, savefig_kws=savefig_kws)
 
     def plot_confusion_matrix(self, test=True, sum_stats=True, output_path=None, savefig_kws=None):
         """
@@ -298,4 +305,5 @@ class Classifier:
        """
         X = self.X_test_ if test else self.X_train_
         y = self.y_test_ if test else self.y_train_
-        plot_roc_curves(X, y, self.model_, output_path=output_path, savefig_kws=savefig_kws)
+        plot_roc_curves(X, y, self.model_, self.labels_, output_path=output_path,
+                        savefig_kws=savefig_kws)

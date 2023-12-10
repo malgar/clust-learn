@@ -547,7 +547,7 @@ Plots two 2D plots:
 [Source](https://github.com/malgar/clust-learn/blob/be4a2238670af01023bd419a0f8adaa7f9cee9f6/clearn/clustering/clustering.py#L545)
 
 ```
-plot_cat_distribution_by_cluster(self, cat_array, cat_label, cluster_label=None, use_weights=False, output_path=None, savefig_kws=None)
+plot_cat_distribution_by_cluster(self, cat_array, cat_label, order=None, cluster_label=None, use_weights=False, output_path=None, savefig_kws=None)
 ```
 
 Plots the relative contingency table of the clusters with a categorical variable as a stacked bar plot.
@@ -575,6 +575,7 @@ classifier = Classifier(df, predictor_cols, target, num_cols=None, cat_cols=None
 | `cat_cols` | `list` | List of categorical columns from predictor_cols |
 | **Attribute** | **Type** | **Description** |
 | `filtered_features_` | `list` | List of columns of the input data frame |
+| `labels_` | `list` | List of class labels |
 | `model_` | Instance of `TransformerMixin` and `BaseEstimator` from `sklearn.base` | Trained classifier |
 | `X_train_` | `numpy.array` | Train split of predictors |
 | `X_test_` | `numpy.array` | Test split of predictors |
@@ -593,7 +594,7 @@ Methods
 ```
 train_model(self, model=None, feature_selection=True, features_to_keep=[],
 			feature_selection_model=None, hyperparameter_tuning=False, param_grid=None,
-			train_size=0.8)
+			train_size=0.8, balance_classes=False)
 ```
 
 This method trains a classification model.
@@ -670,7 +671,7 @@ for all classes.
 [Source](https://github.com/malgar/clust-learn/blob/5826ef273eb876c961eab7fa4eacb31caff25ef0/clearn/classifier/classifier.py#L241)
 
 ```
-plot_shap_importances_beeswarm(self, class_id, n_top=10, output_path=None, savefig_kws=None)
+plot_shap_importances_beeswarm(self, class_id, class_name=None, n_top=10, output_path=None, savefig_kws=None)
 ```
 
 Plots a summary of shap values for a specific class of the target variable. This uses [shap beeswarm plot](https://shap.readthedocs.io/en/latest/example_notebooks/api_examples/plots/beeswarm.html).
@@ -690,7 +691,7 @@ This function makes a pretty plot of an sklearn Confusion Matrix cf using a Seab
 [Source](https://github.com/malgar/clust-learn/blob/5826ef273eb876c961eab7fa4eacb31caff25ef0/clearn/classifier/classifier.py#L280)
 
 ```
- plot_roc_curves(self, test=True, output_path=None, savefig_kws=None)
+ plot_roc_curves(self, test=True, labels=None, output_path=None, savefig_kws=None)
 ```
 
 Plots ROC curve for every class.

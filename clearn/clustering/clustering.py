@@ -281,7 +281,7 @@ class Clustering:
             wcrosstab_df = pd.DataFrame(data=[self.df['cluster_cat'], cat_array, self.weights_],
                                         index=['Clusters', cat_name, 'weights']).transpose()
             freq = wcrosstab_df.groupby(['Clusters', cat_name]).agg({'weights': 'sum'}).reset_index()\
-                .pivot(index='Clusters', columns=cat_name, values='weights')
+                .pivot(index='Clusters', columns=cat_name, values='weights').fillna(0)
 
         if order is not None:
             freq = freq[order]
@@ -579,8 +579,8 @@ class Clustering:
         plot_clusters_2D(coor1, coor2, hue, df_ext, weights, style_kwargs=style_kwargs, output_path=output_path,
                          savefig_kws=savefig_kws)
 
-    def plot_cat_distribution_by_cluster(self, cat_array, cat_label, cluster_label=None, use_weights=False,
-                                         output_path=None, savefig_kws=None):
+    def plot_cat_distribution_by_cluster(self, cat_array, cat_label, cluster_label=None, order=None,
+                                         use_weights=False, output_path=None, savefig_kws=None):
         """
         Plots the relative contingency table of the clusters with a categorical variable as a stacked bar plot.
 
@@ -593,6 +593,8 @@ class Clustering:
             Name/Description of the categorical variable to be displayed.
         cluster_label : str, default=None
             Name/Description of the cluster variable to be displayed.
+        order : list or `numpy.array`, default=None
+            In case categories should be displayed in a specific order.
         use_weights : bool, default=False
             Whether to use weights for centroid comparison.
         output_path : str, default=None
@@ -600,5 +602,5 @@ class Clustering:
         savefig_kws : dict, default=None
             Save figure options.
         """
-        ct = self.describe_clusters_cat(cat_array, cat_label, normalize=True, use_weights=use_weights)
+        ct = self.describe_clusters_cat(cat_array, cat_label, order=order, normalize=True, use_weights=use_weights)
         plot_cat_distribution_by_cluster(ct, cat_label, cluster_label, output_path, savefig_kws)
