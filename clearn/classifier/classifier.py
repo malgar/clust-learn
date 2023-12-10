@@ -97,7 +97,8 @@ class Classifier:
         """
         # Data is split into train and test sets
         X = self.df[self.original_features]
-        y = range(len(self.target))
+        transdict = dict(zip(self.labels_, range(len(self.labels_))))
+        y = np.array(list(map(lambda s: transdict[s], self.target)))
         self.X_train_, self.X_test_, self.y_train_, self.y_test_ = train_test_split(X, y, train_size=train_size)
 
         if balance_classes:
