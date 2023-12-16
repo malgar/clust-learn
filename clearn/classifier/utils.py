@@ -44,7 +44,7 @@ def get_shap_importances(classifier, X):
     return importances
 
 
-def _compute_highly_related_pairs(df, num_vars=None, cat_vars=None, num_kws=None, mixed_kws=None, cat_kws=None):
+def compute_highly_related_pairs(df, num_vars=None, cat_vars=None, num_kws=None, mixed_kws=None, cat_kws=None):
     """
     Computes strongly related pairs of variables. Depending on the type of variables, a correlation coefficient
     (numerical variables), partial eta squared (mixed-type variables), or mutual information (categorical variables) is
@@ -94,7 +94,7 @@ def _compute_highly_related_pairs(df, num_vars=None, cat_vars=None, num_kws=None
 
 
 def run_feature_selection(df, original_features, target, classifier, num_vars=None, cat_vars=None, features_to_keep=[],
-                          num_kws=None, mixed_kws=None, cat_kws=None, rfecv_kws=None):
+                          hi_rel=None, num_kws=None, mixed_kws=None, cat_kws=None, rfecv_kws=None):
     """
     Performs feature selection in three steps:
         - First, if some features must be kept (informed in `features_to_keep`), those other
@@ -124,6 +124,8 @@ def run_feature_selection(df, original_features, target, classifier, num_vars=No
         Array of categorical features. All variable in `cat_vars` must be in `original_features`.
     features_to_keep: list, default=[]
         In case some features are of special interest to the analysis and should be kept.
+    hi_rel: `pandas.DataFrame`, default=None
+        DataFrame with pairs of highly correlated variables. If not passed, it is computed using all the data from `df`
     {num,mixed,cat}_kws : dict, default=None
         Additional keyword arguments to pass to `compute_high_corr_pairs()`, `compute_highly_related_mixed_vars()`, and
         `compute_highly_related_categorical_vars()`.
@@ -146,7 +148,8 @@ def run_feature_selection(df, original_features, target, classifier, num_vars=No
     # First, we compute highly related pairs of variables
     if num_kws is None:
         num_kws = dict(corr_thres=0.8)
-    hi_rel = _compute_highly_related_pairs(df, num_vars, cat_vars, num_kws, mixed_kws, cat_kws)
+    if hi_rel is None:
+        hi_rel = compute_highly_related_pairs(df, num_vars, cat_vars, num_kws, mixed_kws, cat_kws)
 
     filtered_features = original_features.copy()
 
@@ -160,9 +163,6 @@ def run_feature_selection(df, original_features, target, classifier, num_vars=No
                             f'Variables {v} and {v2} are highly correlated, and both were selected to be kept.')
                     else:
                         filtered_features.remove(v2)
-
-        # We update the highly-correlated pair DataFrame for efficiency purposes
-        hi_rel = _compute_highly_related_pairs(df, num_vars, cat_vars, num_kws, mixed_kws, cat_kws)
 
     if hi_rel.shape[0] > 0:
         # Next, we remove highly correlated variables iteratively, keeping the most impactful one

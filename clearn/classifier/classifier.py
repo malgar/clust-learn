@@ -10,7 +10,7 @@ from sklearn.metrics import classification_report, confusion_matrix
 from sklearn.model_selection import train_test_split
 from xgboost import XGBClassifier
 
-from .utils import run_feature_selection, run_hyperparameter_tuning, get_shap_importances
+from .utils import compute_highly_related_pairs, get_shap_importances, run_feature_selection, run_hyperparameter_tuning
 from .viz_utils import *
 
 
@@ -101,7 +101,10 @@ class Classifier:
         y = np.array(list(map(lambda s: transdict[s], self.target)))
         self.X_train_, self.X_test_, self.y_train_, self.y_test_ = train_test_split(X, y, train_size=train_size)
 
+        hi_rel = None
         if balance_classes:
+            self.logger.info('Balancing classes...')
+            hi_rel = compute_highly_related_pairs(self.X_train_, self.num_vars, self.cat_vars)
             oversample = SMOTE()
             self.X_train_, self.y_train_ = oversample.fit_resample(self.X_train_, self.y_train_)
 
@@ -115,7 +118,7 @@ class Classifier:
 
             self.filtered_features_ = run_feature_selection(self.X_train_, self.original_features, self.y_train_,
                                                             feature_selection_model, self.num_vars, self.cat_vars,
-                                                            features_to_keep)
+                                                            features_to_keep, hi_rel)
 
             self.X_train_ = self.X_train_[self.filtered_features_]
             self.X_test_ = self.X_test_[self.filtered_features_]
