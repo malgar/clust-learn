@@ -700,6 +700,6 @@ Plots ROC curve for every class.
 8. Citing
 </h2>
 
-<<TO-DO>>
+Alvarez-Garcia, M., Ibar-Alonso, R., Arenas-Parra, M. (2024). A comprehensive framework for explainable cluster analysis. _Information Sciences, 663_ , 120282, https://doi.org/10.1016/j.ins.2024.120282
 
 
