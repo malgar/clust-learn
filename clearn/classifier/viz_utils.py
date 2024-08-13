@@ -37,8 +37,9 @@ def plot_shap_importances(model, X, n_top=7, output_path=None, savefig_kws=None)
     si = get_shap_importances(model, X)
     low_imp = si.loc[n_top:]
     si = si.loc[:n_top - 1]
-    si = si.append(pd.DataFrame({'variable_name': ['Rest'], 'shap_importance': [low_imp['shap_importance'].sum()]}),
-                   ignore_index=True)
+	si = pd.concat([si, 
+					pd.DataFrame({'variable_name': ['Rest'], 'shap_importance': [low_imp['shap_importance'].sum()]})],
+				   ignore_index=True)			   
     fig, ax = plt.subplots(figsize=(10, 0.675 * si.shape[0]))
     ax = sns.barplot(x='shap_importance', y='variable_name', data=si, color='#ff0051')
     ax.bar_label(ax.containers[0], padding=5, fmt='%.4f', fontsize=10)
