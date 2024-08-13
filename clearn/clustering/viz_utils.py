@@ -53,8 +53,8 @@ def plot_score_comparison(scores, cluster_range, metric_name='Weighted sum of sq
     savefig(output_path=output_path, savefig_kws=savefig_kws)
 
 
-def plot_optimal_components_normalized(scores, max_clusters, metric_name, first_score=0, curve='convex', 
-									   direction='decreasing', output_path=None, savefig_kws=None):
+def plot_optimal_components_normalized(scores, max_clusters, metric_name, first_score=0, curve='convex',
+                                       direction='decreasing', output_path=None, savefig_kws=None):
     """
     Plots the normalized curve used for computing the optimal number of clusters.
 
@@ -67,21 +67,20 @@ def plot_optimal_components_normalized(scores, max_clusters, metric_name, first_
     metric_name : str, default='Weighted sum of squared distances'
         Name of the metric used for comparison. This will be displayed on the y-label.
         Default is 'Weighted sum of squared distances', which corresponds to inertia.
-	first_score : int, default=0
-		To be used when the fist score (the one corresponding to 1 cluster) does not make
-		sense for the selected metric
-	curve : str, default='convex'
-		Curvature of the cluster performance curve by number of clusters
-	direction : str, default='decreasing'
-		Curvature of the cluster performance curve by number of clusters
+    first_score : int, default=0
+        To be used when the fist score (the one corresponding to 1 cluster) does not make sense for the selected metric
+    curve : str, default='convex'
+        Curvature of the cluster performance curve by number of clusters
+    direction : str, default='decreasing'
+        Curvature of the cluster performance curve by number of clusters
     output_path : str, default=None
         Path to save figure as image.
     savefig_kws : dict, default=None
         Save figure options.
     """
     fig, ax = plt.subplots(figsize=(8, 5))
-    kl = KneeLocator(x=range(first_score + 1, max_clusters + 1), y=scores[first_score:], curve=curve, 
-					 direction=direction)
+    kl = KneeLocator(x=range(first_score + 1, max_clusters + 1), y=scores[first_score:], curve=curve,
+                     direction=direction)
     plot_optimal_normalized_elbow(scores, kl, ax, optimal_label='Optimal number of clusters',
                                   xlabel='Number of clusters', ylabel=f'Normalized {metric_name}')
     savefig(output_path=output_path, savefig_kws=savefig_kws)

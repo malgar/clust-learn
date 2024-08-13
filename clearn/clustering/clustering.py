@@ -111,18 +111,18 @@ class Clustering:
                         1 if nc == 1 else calinski_harabasz_score(self.df[self.dimensions_], local_labels))
 
             if len(range(*cluster_range)) > 1:
-				first_score = 0
-				new_cluster_range = cluster_range
-				curve = 'convex'
-				direction = 'decreasing'
-				if metric != 'inertia':
-					first_score = 1
-					new_cluster_range = [2, cluster_range[1]]
-					if metric != 'davies_bouldin_score':
-						curve = 'concave'
-						direction='increasing'
-						
-				kl = KneeLocator(x=range(*new_cluster_range), y=self.scores_[algorithm][first_score:], 
+                first_score = 0
+                new_cluster_range = cluster_range
+                curve = 'convex'
+                direction = 'decreasing'
+                if metric != 'inertia':
+                    first_score = 1
+                    new_cluster_range = [2, cluster_range[1]]
+                    if metric != 'davies_bouldin_score':
+                        curve = 'concave'
+                        direction='increasing'
+
+                kl = KneeLocator(x=range(*new_cluster_range), y=self.scores_[algorithm][first_score:],
 								 curve=curve, direction=direction)					 
                 optimal_list.append((algorithm, kl.knee, self.scores_[algorithm][kl.knee-1]))
             else:
@@ -444,20 +444,18 @@ class Clustering:
             Save figure options.
         """
         if len(self.scores_[self.optimal_config_[0]]) > 1:
-			first_score = 0
-			curve = 'convex'
-			direction = 'decreasing'
-			if self.metric_ != 'inertia':
-				first_score = 1
-				new_cluster_range = [2, cluster_range[1]]
-				if self.metric_ != 'davies_bouldin_score':
-					curve = 'concave'
-					direction='increasing'
-		
+            first_score = 0
+            curve = 'convex'
+            direction = 'decreasing'
+            if self.metric_ != 'inertia':
+                first_score = 1
+                if self.metric_ != 'davies_bouldin_score':
+                    curve = 'concave'
+                    direction='increasing'
+
             plot_optimal_components_normalized(self.scores_[self.optimal_config_[0]],
-                                               len(self.scores_[self.optimal_config_[0]]),
-                                               METRIC_NAMES[self.metric_], fist_score=first_score, curve=curve, 
-											   direction=direction, output_path, savefig_kws)
+                                               len(self.scores_[self.optimal_config_[0]]), METRIC_NAMES[self.metric_],
+                                               first_score, curve, direction, output_path, savefig_kws)
         else:
             raise RuntimeError('This plot can only be used when `cluster_range` contains at least 2 values')
 
