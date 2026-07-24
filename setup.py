@@ -40,7 +40,7 @@ setup(
         "seaborn>=0.11.2",
         "shap>=0.40.0,<0.46",
         "statsmodels>=0.13.2",
-        "xgboost>=1.5.2"
+        "xgboost>=1.5.2,<2"
     ],
     python_requires='>=3.9,<3.12'
 )
