@@ -1,0 +1,24 @@
+# Pinned environment verified to reproduce the illustrative example end-to-end.
+# Python 3.9-3.11. On macOS, xgboost also needs the OpenMP
+# runtime: `brew install libomp` (or provide libomp.dylib on the library path).
+#
+# Install with:  pip install -r requirements.txt
+
+clust-learn==0.2.8
+
+numpy==1.26.4
+pandas==1.5.3
+scipy==1.17.1
+scikit-learn==1.9.0
+statsmodels==0.14.6
+networkx==3.6.1
+prince==0.10.4
+pingouin==0.5.5
+kneed==0.8.6
+imbalanced-learn==0.14.2
+shap==0.44.1
+xgboost==1.7.6
+matplotlib==3.7.5
+seaborn==0.13.2
+numba==0.59.1
+llvmlite==0.42.0
