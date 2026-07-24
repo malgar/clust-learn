@@ -1,9 +1,15 @@
-# This script contains the code used for the illustration example
+# This script contains the code used for the illustrative examples. 
+# It reproduces the full workflow:
+# data preprocessing -> dimensionality reduction -> clustering -> classification.
 
+import matplotlib
+matplotlib.use('Agg') 
 import matplotlib.pyplot as plt
 import numpy as np
 import os
 import pandas as pd
+
+from sklearn.cluster import KMeans, AgglomerativeClustering
 
 # Set the seed
 np.random.seed(42)
@@ -32,7 +38,7 @@ df = pd.read_csv('data/pisa_spain_sample_v2.csv')
 print('--- DATA PREPROCESSING ---')
 from clearn.data_preprocessing import *
 
-# Computre missing values
+# Compute missing values
 n_missing = df.isnull().sum().sum()
 print('Missing values:', n_missing, f'({n_missing*100/df.size}%)')
 
@@ -76,7 +82,7 @@ print('--- CLUSTERING ---')
 from clearn.clustering import Clustering
 
 # Instantiate class and compute clusters on projected space
-cl = Clustering(df_t, algorithms=['kmeans', 'ward'], normalize=False)
+cl = Clustering(df_t, algorithms=[KMeans(random_state=42), AgglomerativeClustering()], normalize=False)
 cl.compute_clusters(max_clusters=21, prefix='STU')
 print(cl.optimal_config_)
 
@@ -113,8 +119,8 @@ print('--- CLASSIFIER ---')
 from clearn.classifier import Classifier
 np.random.seed(42)
 
-# Instantiate the class with the original variables. As target, we set the clusters computed above
-var_list = list(df_.columns[1:-3])
+# Instantiate the class with the original variables. As target, we set the clusters computed above.
+var_list = num_vars + cat_vars
 classifier = Classifier(df_, predictor_cols=var_list, target=df_['cluster'], num_cols=num_vars, cat_cols=cat_vars)
 
 # Build a pipeline with feature selection, hyperparameter tuning, and model fitting. For feature selection, we make sure
@@ -153,9 +159,4 @@ print(classifier.classification_report())
 # ROC curves
 classifier.plot_roc_curves(output_path=os.path.join("img", "classifier_roc_curves.jpg"))
 
-
-
-
-
-
-
+print('DONE')

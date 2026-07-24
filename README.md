@@ -5,12 +5,12 @@
 
 <!-- Short description -->
 <p align="center">
-   A Python package for extracting information from large and high-dimensional mixed-type data through explainable cluster analysis.
+   A Python package for explainable cluster analysis of mixed-type data with many variables.
 </p>
 
 <br/>
 
-![clust-learn visualizations](https://github.com/malgar/clust-learn/blob/v0.0.8/images/visualizations.png?raw=true)
+![clust-learn visualizations](https://github.com/malgar/clust-learn/blob/master/images/visualizations.png?raw=true)
 
 <hr>
 
@@ -19,6 +19,7 @@
 2. [Overall architecture](#user-content-architecture)
 3. [Implementation](#user-content-implementation)
 4. [Installation](#user-content-install)
+	- [Quickstart](#user-content-quickstart)
 5. [Version and license information](#user-content-license)
 6. [Bug reports and future work](#user-content-future)
 7. [User guide & API](#user-content-api)
@@ -40,8 +41,7 @@
 1. Introduction
 </h2>
 
-`clust-learn` enables users to run end-to-end explainable cluster analysis to extract information from large and high-dimensional
-mixed-type data, and it does so by providing a framework that guides the user through data preprocessing, dimensionality reduction, 
+`clust-learn` enables users to run end-to-end explainable cluster analysis on mixed-type data with many variables, and it does so by providing a framework that guides the user through data preprocessing, dimensionality reduction, 
 clustering, and classification of the obtained clusters. It is designed to require very few lines of code, and with a strong
 focus on explainability.
 
@@ -55,7 +55,7 @@ focus on explainability.
 * [clustering](https://github.com/malgar/clust-learn/tree/master/clearn/clustering)
 * [classifier](https://github.com/malgar/clust-learn/tree/master/clearn/classifier)
 
-**Figue 1** shows the package layout with the functionalities covered by each module along with the techniques used, the
+**Figure 1** shows the package layout with the functionalities covered by each module along with the techniques used, the
 explainability strategies available, and the main functions and class methods encapsulating these techniques and
 explainability strategies.
 
@@ -69,10 +69,11 @@ explainability strategies.
 3. Implementation
 </h2>
 
-The package is implemented with Python 3.9 using open source libraries. It relies heavily on [pandas](https://pandas.pydata.org/) and
-[scikit-learn](https://scikit-learn.org/stable/). Read the complete list of requirements [here](https://github.com/malgar/clust-learn/blob/master/requirements.txt).
+The package is implemented in Python and supports **Python 3.9–3.11**. It relies heavily on [pandas](https://pandas.pydata.org/) and [scikit-learn](https://scikit-learn.org/stable/), and also uses statsmodels, networkx, prince, pingouin, kneed, imbalanced-learn, SHAP, and XGBoost. The complete list is in [requirements.txt](https://github.com/malgar/clust-learn/blob/master/requirements.txt).
 
-It can be installed manually or from pip/PyPI (see Section [4. Installation](#user-content-install)).
+> **Note on dependency versions.** clust-learn currently requires `numpy<2`, `pandas<2`, and `matplotlib<3.9`. For a fully pinned, verified environment (used to reproduce the accompanying paper), see [`replication_materials/requirements.txt`](https://github.com/malgar/clust-learn/blob/master/replication_materials/requirements.txt).
+
+It can be installed manually or from pip/PyPI (see [Installation](#user-content-install)).
 
 <h2 id="user-content-install">
 4. Installation
@@ -84,13 +85,59 @@ The package is on [PyPI](https://pypi.org/project/clust-learn/). Simply run:
 pip install clust-learn
 ```
 
+<h2 id="user-content-quickstart">
+Quickstart
+</h2>
+
+`clust-learn` runs a full explainable clustering workflow in a few lines. Given a `pandas.DataFrame` and the lists of numerical and categorical columns:
+
+```python
+import pandas as pd
+from sklearn.cluster import KMeans, AgglomerativeClustering
+
+from clearn.data_preprocessing import impute_missing_values, remove_outliers
+from clearn.dimensionality_reduction import DimensionalityReduction
+from clearn.clustering import Clustering
+from clearn.classifier import Classifier
+
+df = pd.read_csv("your_data.csv")
+num_vars = ["age", "income", ...]       # numerical column names
+cat_vars = ["region", "segment", ...]   # categorical column names
+
+# 1. Preprocessing - impute missing values, then remove multivariate outliers
+df = impute_missing_values(df, num_vars=num_vars, cat_vars=cat_vars)
+df, _ = remove_outliers(df, num_vars + cat_vars)
+df = df.reset_index(drop=True)
+
+# 2. Dimensionality reduction - SPCA (numerical) + MCA (categorical)
+dr = DimensionalityReduction(df, num_vars=num_vars, cat_vars=cat_vars,
+                             num_algorithm="spca")
+components = dr.transform()             # number of components chosen automatically
+
+# 3. Clustering - compare algorithms; best configuration via the elbow method
+#    (normalize=False: the derived components are already on a comparable scale)
+cl = Clustering(components,
+                algorithms=[KMeans(random_state=42), AgglomerativeClustering()],
+                normalize=False)
+cl.compute_clusters(max_clusters=10)
+df["cluster"] = cl.df["cluster"].values
+
+# 4. Cluster interpretation - classify cluster membership and explain with SHAP
+clf = Classifier(df, predictor_cols=num_vars + cat_vars, target=df["cluster"],
+                 num_cols=num_vars, cat_cols=cat_vars)
+clf.train_model()
+clf.plot_shap_importances()             # which original variables define each cluster
+```
+
+Each module is independent and can be used on its own; see the [User guide & API](#user-content-api) for the full set of options and diagnostics.
+
 <h2 id="user-content-license">
 5. Version and license information
 </h2>
 
-* Version: 0.2.7
-* Author: Miguel Alvarez-Garcia (malvarez.statistics@gmail.com)
-* License: GPLv3 
+* Version: 0.2.8
+* Author: Miguel Alvarez-Garcia (miguel.alvarez@urjc.es)
+* License: [GPLv3](LICENSE.md) 
 
 <h2 id="user-content-future">
 6. Bug reports and future work
@@ -109,7 +156,7 @@ Please report bugs and feature requests through creating a new issue [here](http
 3. Clustering
 4. Classifier
 
-**Figue 1** shows the package layout with the functionalities covered by each module along with the techniques used, the explainability strategies available, and the main functions and class methods encapsulating these techniques and explainability strategies.
+**Figure 1** shows the package layout with the functionalities covered by each module along with the techniques used, the explainability strategies available, and the main functions and class methods encapsulating these techniques and explainability strategies.
 
 The four modules are designed to be used sequentially to ensure robust and explainable results. However, each of them is independent and can be used separately to suit different use cases.
 
@@ -188,7 +235,7 @@ This function imputes missing values following this steps:
 - `{num,mixed,cat}_pair_kws` : `dict`, default=`None`
 	- Additional keyword arguments to pass to compute imputation pairs for one-to-one model based imputation, namely:
 		- For numerical pairs, `corr_thres` and `method` for setting the correlation coefficient threshold and method. By default, `corr_thres=0.7` and `method='pearson'`.
-		- For mixed-type pairs, `np2_thres` for setting the a threshold on partial *eta* square with 0.14 as default value.
+		- For mixed-type pairs, `np2_thres` for setting a threshold on partial *eta* square with 0.14 as default value.
 		- For categorical pairs, `mi_thres` for setting a threshold on mutual information score. By default, `mi_thres=0.6`.
 - `graph_thres` : `float`, default=0.05
 	- Threshold to determine if two variables are similar based on mutual information score, and therefore are an edge of the graph from which variable clusters are derived.
@@ -298,7 +345,7 @@ Methods
 
 <h4>transform()</h4>
 
-[Source](https://github.com/malgar/clust-learn/blob/f0744a15823c2b7c6b49c278d08d708d05df952a/clearn/dimensionality_reduction/dimensionality_reduction.py#L79)
+[Source](https://github.com/malgar/clust-learn/blob/v0.2.8/clearn/dimensionality_reduction/dimensionality_reduction.py#L79)
 
 ```
 transform(self, n_components=None, min_explained_variance_ratio=0.5)
@@ -306,9 +353,9 @@ transform(self, n_components=None, min_explained_variance_ratio=0.5)
 
 Transforms a DataFrame df to a lower dimensional space.
 
-<h4>num_main_contributors(()</h4>
+<h4>num_main_contributors()</h4>
 
-[Source](https://github.com/malgar/clust-learn/blob/f0744a15823c2b7c6b49c278d08d708d05df952a/clearn/dimensionality_reduction/dimensionality_reduction.py#L191)
+[Source](https://github.com/malgar/clust-learn/blob/v0.2.8/clearn/dimensionality_reduction/dimensionality_reduction.py#L191)
 
 ```
 num_main_contributors(self, thres=0.5, n_contributors=None, dim_idx=None, component_description=None, col_description=None, output_path=None)
@@ -316,9 +363,9 @@ num_main_contributors(self, thres=0.5, n_contributors=None, dim_idx=None, compon
 
 Computes the original numerical variables with the strongest relation to the derived variable(s) (measured as Pearson correlation coefficient).
 
-<h4>cat_main_contributors(()</h4>
+<h4>cat_main_contributors()</h4>
 
-[Source](https://github.com/malgar/clust-learn/blob/f0744a15823c2b7c6b49c278d08d708d05df952a/clearn/dimensionality_reduction/dimensionality_reduction.py#L225)
+[Source](https://github.com/malgar/clust-learn/blob/v0.2.8/clearn/dimensionality_reduction/dimensionality_reduction.py#L225)
 
 ```
 cat_main_contributors(self, thres=0.14, n_contributors=None, dim_idx=None, component_description=None, col_description=None, output_path=None)
@@ -328,17 +375,17 @@ Computes the original categorical variables with the strongest relation to the d
 
 <h4>cat_main_contributors_stats()</h4>
 
-[Source](https://github.com/malgar/clust-learn/blob/f0744a15823c2b7c6b49c278d08d708d05df952a/clearn/dimensionality_reduction/dimensionality_reduction.py#L259)
+[Source](https://github.com/malgar/clust-learn/blob/v0.2.8/clearn/dimensionality_reduction/dimensionality_reduction.py#L259)
 
 ```
 cat_main_contributors_stats(self, thres=0.14, n_contributors=None, dim_idx=None, output_path=None)
 ```
 
-Computes for every categorical variable's value, the mean and std of the derived variables that are strongly related to the categorical variable (based on the correlation ratio)).
+Computes for every categorical variable's value, the mean and std of the derived variables that are strongly related to the categorical variable (based on the correlation ratio).
 
 <h4>plot_num_explained_variance()</h4>
 
-[Source](https://github.com/malgar/clust-learn/blob/f0744a15823c2b7c6b49c278d08d708d05df952a/clearn/dimensionality_reduction/dimensionality_reduction.py#L286)
+[Source](https://github.com/malgar/clust-learn/blob/v0.2.8/clearn/dimensionality_reduction/dimensionality_reduction.py#L286)
 
 ```
 plot_num_explained_variance(self, thres=0.5, plots='all', output_path=None, savefig_kws=None)
@@ -348,7 +395,7 @@ Plot the explained variance (ratio, cumulative, and/or normalized) for numerical
 
 <h4>plot_cat_explained_variance()</h4>
 
-[Source](https://github.com/malgar/clust-learn/blob/f0744a15823c2b7c6b49c278d08d708d05df952a/clearn/dimensionality_reduction/dimensionality_reduction.py#L303)
+[Source](https://github.com/malgar/clust-learn/blob/v0.2.8/clearn/dimensionality_reduction/dimensionality_reduction.py#L303)
 
 ```
 plot_cat_explained_variance(self, thres=0.5, plots='all', output_path=None, savefig_kws=None)
@@ -358,7 +405,7 @@ Plot the explained variance (ratio, cumulative, and/or normalized) for categoric
 
 <h4>plot_num_main_contributors()</h4>
 
-[Source](https://github.com/malgar/clust-learn/blob/f0744a15823c2b7c6b49c278d08d708d05df952a/clearn/dimensionality_reduction/dimensionality_reduction.py#L321)
+[Source](https://github.com/malgar/clust-learn/blob/v0.2.8/clearn/dimensionality_reduction/dimensionality_reduction.py#L321)
 
 ```
 plot_num_main_contributors(self, thres=0.5, n_contributors=5, dim_idx=None, output_path=None, savefig_kws=None)
@@ -368,7 +415,7 @@ Plot main contributors (original variables with the strongest relation with deri
 
 <h4>plot_cat_main_contributor_distribution()</h4>
 
-[Source](https://github.com/malgar/clust-learn/blob/f0744a15823c2b7c6b49c278d08d708d05df952a/clearn/dimensionality_reduction/dimensionality_reduction.py#L344)
+[Source](https://github.com/malgar/clust-learn/blob/v0.2.8/clearn/dimensionality_reduction/dimensionality_reduction.py#L344)
 
 ```
 plot_cat_main_contributor_distribution(self, thres=0.14, n_contributors=None, dim_idx=None, output_path=None, savefig_kws=None)
@@ -387,16 +434,18 @@ Clustering class
 </h4>
 
 ```
-cl = Clustering(df, algorithms='kmeans', normalize=False)
+from sklearn.cluster import KMeans
+
+cl = Clustering(df, algorithms=[KMeans()])
 ```
 
 | Parameter | Type | Description |
 |:-|:-|:-|
 | `df` | `pandas.DataFrame` | Data frame containing the data to be clustered |
 | `algorithms` | instance or `list` of instances | Algorithm instances to be used for clustering. They must implement the `fit` and `set_params` methods |
-| `normalize` | `bool` | Whether to apply data normalization for fair comparisons between variables. In case dimensionality reduction is applied beforehand, normalization should not be applied |
+| `normalize` | `bool` | Whether to apply data normalization for fair comparisons between variables (`True` by default). When dimensionality reduction is applied beforehand, set `normalize=False`. |
 | **Attribute** | **Type** | **Description** |
-| `dimensions_` | `list` | List of columns of they input data frame |
+| `dimensions_` | `list` | List of columns of the input data frame |
 | `instances_` | `dict` | Pairs of algorithm name and its instance |
 | `metric_` | `string` | The cluster validation metric used. Four metrics available: ['inertia', 'davies_bouldin_score', 'silhouette_score',  'calinski_harabasz_score'] |
 | `optimal_config_` | `tuple` | Tuple with the optimal configuration for clustering containing the algorithm name, number of clusters, and value of the chosen validation metric |
@@ -408,7 +457,7 @@ Methods
 
 <h4>compute_clusters()</h4>
 
-[Source](https://github.com/malgar/clust-learn/blob/be4a2238670af01023bd419a0f8adaa7f9cee9f6/clearn/clustering/clustering.py#L117)
+[Source](https://github.com/malgar/clust-learn/blob/v0.2.8/clearn/clustering/clustering.py#L117)
 
 ```
 compute_clusters(self, n_clusters=None, metric='inertia', max_clusters=10, prefix=None, weights=None)
@@ -425,7 +474,7 @@ criteria explained above.
 describe_clusters()
 </h4>
 
-[Source](https://github.com/malgar/clust-learn/blob/be4a2238670af01023bd419a0f8adaa7f9cee9f6/clearn/clustering/clustering.py#L182)
+[Source](https://github.com/malgar/clust-learn/blob/v0.2.8/clearn/clustering/clustering.py#L182)
 
 ```
 describe_clusters(self, df_ext=None, variables=None, cluster_filter=None, statistics=['mean', 'median', 'std'], output_path=None)
@@ -438,7 +487,7 @@ For categorical variables use [`describe_clusters_cat()`](#describe_clusters_cat
 describe_clusters_cat()
 </h4>
 
-[Source](https://github.com/malgar/clust-learn/blob/be4a2238670af01023bd419a0f8adaa7f9cee9f6/clearn/clustering/clustering.py#L237)
+[Source](https://github.com/malgar/clust-learn/blob/v0.2.8/clearn/clustering/clustering.py#L237)
 
 ```
 describe_clusters_cat(self, cat_array, cat_name, order=None, normalize=False, use_weights=False, output_path=None)
@@ -449,7 +498,7 @@ For continuous variables use [`describe_clusters()`](#describe_clusters).
 
 <h4>compare_cluster_means_to_global_means()</h4>
 
-[Source](https://github.com/malgar/clust-learn/blob/be4a2238670af01023bd419a0f8adaa7f9cee9f6/clearn/clustering/clustering.py#L276)
+[Source](https://github.com/malgar/clust-learn/blob/v0.2.8/clearn/clustering/clustering.py#L276)
 
 ```
 compare_cluster_means_to_global_means(self, df_original=None, output_path=None)
@@ -460,7 +509,7 @@ and the global mean.
 
 <h4>anova_tests()</h4>
 
-[Source](https://github.com/malgar/clust-learn/blob/be4a2238670af01023bd419a0f8adaa7f9cee9f6/clearn/clustering/clustering.py#L303)
+[Source](https://github.com/malgar/clust-learn/blob/v0.2.8/clearn/clustering/clustering.py#L303)
 
 ```
 anova_tests(self, df_test=None, vars_test=None, cluster_filter=None, output_path=None)
@@ -470,7 +519,7 @@ Runs ANOVA tests for a given set of continuous variables (internal or external) 
 
 <h4>chi2_test()</h4>
 
-[Source](https://github.com/malgar/clust-learn/blob/be4a2238670af01023bd419a0f8adaa7f9cee9f6/clearn/clustering/clustering.py#L360)
+[Source](https://github.com/malgar/clust-learn/blob/v0.2.8/clearn/clustering/clustering.py#L360)
 
 ```
 chi2_test(self, cat_array)
@@ -480,7 +529,7 @@ Runs Chi-squared tests for a given categorical variable to test dependency with 
 
 <h4>plot_score_comparison()</h4>
 
-[Source](https://github.com/malgar/clust-learn/blob/be4a2238670af01023bd419a0f8adaa7f9cee9f6/clearn/clustering/clustering.py#L379)
+[Source](https://github.com/malgar/clust-learn/blob/v0.2.8/clearn/clustering/clustering.py#L379)
 
 ```
 plot_score_comparison(self, output_path=None, savefig_kws=None)
@@ -490,7 +539,7 @@ Plots the comparison in performance between the different clustering algorithms.
 
 <h4>plot_optimal_components_normalized()</h4>
 
-[Source](https://github.com/malgar/clust-learn/blob/be4a2238670af01023bd419a0f8adaa7f9cee9f6/clearn/clustering/clustering.py#L400)
+[Source](https://github.com/malgar/clust-learn/blob/v0.2.8/clearn/clustering/clustering.py#L400)
 
 ```
 plot_optimal_components_normalized(self, output_path=None, savefig_kws=None)
@@ -500,7 +549,7 @@ Plots the normalized curve used for computing the optimal number of clusters.
 
 <h4>plot_clustercount()</h4>
 
-[Source](https://github.com/malgar/clust-learn/blob/be4a2238670af01023bd419a0f8adaa7f9cee9f6/clearn/clustering/clustering.py#L419)
+[Source](https://github.com/malgar/clust-learn/blob/v0.2.8/clearn/clustering/clustering.py#L419)
 
 ```
 plot_clustercount(self, use_weights=False, output_path=None, savefig_kws=None)
@@ -510,7 +559,7 @@ Plots a bar plot with cluster counts.
 
 <h4>plot_cluster_means_to_global_means_comparison()</h4>
 
-[Source](https://github.com/malgar/clust-learn/blob/be4a2238670af01023bd419a0f8adaa7f9cee9f6/clearn/clustering/clustering.py#L432)
+[Source](https://github.com/malgar/clust-learn/blob/v0.2.8/clearn/clustering/clustering.py#L432)
 
 ```
 plot_cluster_means_to_global_means_comparison(self, use_weights= False, df_original=None, xlabel=None, ylabel=None,
@@ -518,11 +567,11 @@ plot_cluster_means_to_global_means_comparison(self, use_weights= False, df_origi
                                               output_path=None, savefig_kws=None)
 ```
 
-Plots the normalized curve used for computing the optimal number of clusters.
+Plots a heat map of the relative difference between the intra-cluster mean and the global mean for every cluster.
 
 <h4>plot_distribution_comparison_by_cluster()</h4>
 
-[Source](https://github.com/malgar/clust-learn/blob/be4a2238670af01023bd419a0f8adaa7f9cee9f6/clearn/clustering/clustering.py#L469)
+[Source](https://github.com/malgar/clust-learn/blob/v0.2.8/clearn/clustering/clustering.py#L469)
 
 ```
 plot_distribution_comparison_by_cluster(self, df_ext=None, xlabel=None, ylabel=None, output_path=None, savefig_kws=None)
@@ -532,7 +581,7 @@ Plots the violin plots per cluster and *continuous* variables of interest to und
 
 <h4>plot_clusters_2D()</h4>
 
-[Source](https://github.com/malgar/clust-learn/blob/be4a2238670af01023bd419a0f8adaa7f9cee9f6/clearn/clustering/clustering.py#L498)
+[Source](https://github.com/malgar/clust-learn/blob/v0.2.8/clearn/clustering/clustering.py#L498)
 
 ```
 plot_clusters_2D(self, coor1, coor2, use_weights=False, style_kwargs=dict(), output_path=None, savefig_kws=None)
@@ -544,7 +593,7 @@ Plots two 2D plots:
 	 
 <h4>plot_cat_distribution_by_cluster()</h4>
 
-[Source](https://github.com/malgar/clust-learn/blob/be4a2238670af01023bd419a0f8adaa7f9cee9f6/clearn/clustering/clustering.py#L545)
+[Source](https://github.com/malgar/clust-learn/blob/v0.2.8/clearn/clustering/clustering.py#L545)
 
 ```
 plot_cat_distribution_by_cluster(self, cat_array, cat_label, order=None, cluster_label=None, use_weights=False, output_path=None, savefig_kws=None)
@@ -589,7 +638,7 @@ Methods
 
 <h4>train_model()</h4>
 
-[Source](https://github.com/malgar/clust-learn/blob/5826ef273eb876c961eab7fa4eacb31caff25ef0/clearn/classifier/classifier.py#L52)
+[Source](https://github.com/malgar/clust-learn/blob/v0.2.8/clearn/classifier/classifier.py#L52)
 
 ```
 train_model(self, model=None, feature_selection=True, features_to_keep=[],
@@ -623,7 +672,7 @@ using `sklearn.model_selection.train_test_split`.
 
 <h4>hyperparameter_tuning_metrics()</h4>
 
-[Source](https://github.com/malgar/clust-learn/blob/5826ef273eb876c961eab7fa4eacb31caff25ef0/clearn/classifier/classifier.py#L134)
+[Source](https://github.com/malgar/clust-learn/blob/v0.2.8/clearn/classifier/classifier.py#L134)
 
 ```
 hyperparameter_tuning_metrics(self, output_path=None)
@@ -634,7 +683,7 @@ combination in hyperparameter tuning.
 
 <h4>confusion_matrix()</h4>
 
-[Source](https://github.com/malgar/clust-learn/blob/5826ef273eb876c961eab7fa4eacb31caff25ef0/clearn/classifier/classifier.py#L154)
+[Source](https://github.com/malgar/clust-learn/blob/v0.2.8/clearn/classifier/classifier.py#L154)
 
 ```
 confusion_matrix(self, test=True, sum_stats=True, output_path=None)
@@ -644,7 +693,7 @@ This method returns the confusion matrix of the classification model.
 
 <h4>classification_report()</h4>
 
-[Source](https://github.com/malgar/clust-learn/blob/5826ef273eb876c961eab7fa4eacb31caff25ef0/clearn/classifier/classifier.py#L195)
+[Source](https://github.com/malgar/clust-learn/blob/v0.2.8/clearn/classifier/classifier.py#L195)
 
 ```
 classification_report(self, test=True, output_path=None)
@@ -657,7 +706,7 @@ and macro average and weighted average of the three intra-class metrics.
 
 <h4>plot_shap_importances()</h4>
 
-[Source](https://github.com/malgar/clust-learn/blob/5826ef273eb876c961eab7fa4eacb31caff25ef0/clearn/classifier/classifier.py#L225)
+[Source](https://github.com/malgar/clust-learn/blob/v0.2.8/clearn/classifier/classifier.py#L225)
 
 ```
 plot_shap_importances(self, n_top=7, output_path=None, savefig_kws=None)
@@ -668,7 +717,7 @@ for all classes.
 
 <h4>plot_shap_importances_beeswarm()</h4>
 
-[Source](https://github.com/malgar/clust-learn/blob/5826ef273eb876c961eab7fa4eacb31caff25ef0/clearn/classifier/classifier.py#L241)
+[Source](https://github.com/malgar/clust-learn/blob/v0.2.8/clearn/classifier/classifier.py#L241)
 
 ```
 plot_shap_importances_beeswarm(self, class_id, class_name=None, n_top=10, output_path=None, savefig_kws=None)
@@ -678,7 +727,7 @@ Plots a summary of shap values for a specific class of the target variable. This
 
 <h4>plot_confusion_matrix()</h4>
 
-[Source](https://github.com/malgar/clust-learn/blob/5826ef273eb876c961eab7fa4eacb31caff25ef0/clearn/classifier/classifier.py#L260)
+[Source](https://github.com/malgar/clust-learn/blob/v0.2.8/clearn/classifier/classifier.py#L260)
 
 ```
 plot_confusion_matrix(self, test=True, sum_stats=True, output_path=None, savefig_kws=None)
@@ -688,7 +737,7 @@ This function makes a pretty plot of an sklearn Confusion Matrix cf using a Seab
 
 <h4>plot_roc_curves()</h4>
 
-[Source](https://github.com/malgar/clust-learn/blob/5826ef273eb876c961eab7fa4eacb31caff25ef0/clearn/classifier/classifier.py#L280)
+[Source](https://github.com/malgar/clust-learn/blob/v0.2.8/clearn/classifier/classifier.py#L280)
 
 ```
  plot_roc_curves(self, test=True, labels=None, output_path=None, savefig_kws=None)

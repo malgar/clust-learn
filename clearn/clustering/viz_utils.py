@@ -120,7 +120,7 @@ def plot_cluster_means_to_global_means_comparison(df, dimensions, weights=None, 
                                                   levels=[-0.50, -0.32, -0.17, -0.05, 0.05, 0.17, 0.32, 0.50],
                                                   data_standardized=False, output_path=None, savefig_kws=None):
     """
-    Plots the normalized curve used for computing the optimal number of clusters.
+    Plots a heat map of the relative difference between the intra-cluster mean and the global mean, for every cluster.
 
     Parameters
     ----------
