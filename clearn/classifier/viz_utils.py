@@ -80,6 +80,45 @@ def plot_shap_importances_beeswarm(model, X, class_id, class_name=None, n_top=10
     savefig(output_path, savefig_kws)
 
 
+def _confusion_matrix_box_labels(cf, group_names=None, count=True, percent=True, sum_stats=True):
+    """
+    Builds the text shown inside each square of the confusion matrix plot. See `plot_confusion_matrix`.
+    """
+    blanks = ['' for i in range(cf.size)]
+
+    if group_names and len(group_names) == cf.size:
+        group_labels = ["{}\n".format(value) for value in group_names]
+    else:
+        group_labels = blanks
+
+    flatten = cf.values.flatten()
+    if count:
+        # Format of totals is different
+        if sum_stats:
+            group_counts = ["{0:0.0f}\n".format(flatten[i]) if (
+                        i % cf.shape[0] < cf.shape[0] - 1 and i // cf.shape[0] < cf.shape[0] - 1)
+                            else "{0:.2%}".format(flatten[i]) for i in range(len(flatten))]
+        else:
+            group_counts = ["{0:0.0f}\n".format(value) for value in flatten]
+    else:
+        group_counts = blanks
+
+    if percent:
+        # Format of totals is different
+        if sum_stats:
+            total = np.sum(cf.values[:-1, :-1])
+            group_percentages = ["{0:.2%}".format(flatten[i] / total) if (
+                        i % cf.shape[0] < cf.shape[0] - 1 and i // cf.shape[0] < cf.shape[0] - 1)
+                                 else "" for i in range(len(flatten))]
+        else:
+            group_percentages = ["{0:.2%}".format(value) for value in cf.values.flatten() / np.sum(cf.values)]
+    else:
+        group_percentages = blanks
+
+    box_labels = [f"{v1}{v2}{v3}".strip() for v1, v2, v3 in zip(group_labels, group_counts, group_percentages)]
+    return np.asarray(box_labels).reshape(cf.shape[0], cf.shape[1])
+
+
 def plot_confusion_matrix(cf, group_names=None, count=True, percent=True, sum_stats=True, xyticks=True,
                           xyplotlabels=True, figsize=None, cmap='Blues', title=None, output_path=None,
                           savefig_kws=None):
@@ -118,38 +157,7 @@ def plot_confusion_matrix(cf, group_names=None, count=True, percent=True, sum_st
     """
 
     # CODE TO GENERATE TEXT INSIDE EACH SQUARE
-    blanks = ['' for i in range(cf.size)]
-
-    if group_names and len(group_names) == cf.size:
-        group_labels = ["{}\n".format(value) for value in group_names]
-    else:
-        group_labels = blanks
-
-    flatten = cf.values.flatten()
-    if count:
-        # Format of totals is different
-        if sum_stats:
-            group_counts = ["{0:0.0f}\n".format(flatten[i]) if (
-                        i % cf.shape[0] < cf.shape[0] - 1 and i // cf.shape[0] < cf.shape[0] - 1)
-                            else "{0:.2%}".format(flatten[i]) for i in range(len(flatten))]
-        else:
-            group_counts = ["{0:0.0f}\n".format(value) for value in flatten]
-    else:
-        group_counts = blanks
-
-    if percent:
-        # Format of totals is different
-        if sum_stats:
-            group_percentages = ["{0:.2%}".format(flatten[i] / np.sum(cf.values)) if (
-                        i % cf.shape[0] < cf.shape[0] - 1 and i // cf.shape[0] < cf.shape[0] - 1)
-                                 else "" for i in range(len(flatten))]
-        else:
-            group_percentages = ["{0:.2%}".format(value) for value in cf.values.flatten() / np.sum(cf.values)]
-    else:
-        group_percentages = blanks
-
-    box_labels = [f"{v1}{v2}{v3}".strip() for v1, v2, v3 in zip(group_labels, group_counts, group_percentages)]
-    box_labels = np.asarray(box_labels).reshape(cf.shape[0], cf.shape[1])
+    box_labels = _confusion_matrix_box_labels(cf, group_names, count, percent, sum_stats)
 
     # Cluster names as tick labels. If precision, recall, and global accuracy are included, no tick label is displayed
     # for them
@@ -161,17 +169,21 @@ def plot_confusion_matrix(cf, group_names=None, count=True, percent=True, sum_st
             xyticklabels = list(map(lambda x: x[1], cf.columns))
 
     # MAKE THE HEATMAP VISUALIZATION
-    ax, fig = plt.subplots(figsize=figsize)
+    fig, ax = plt.subplots(figsize=figsize)
     sns.heatmap(cf.values, annot=box_labels, fmt="", cmap=cmap, cbar=False, xticklabels=xyticklabels,
-                yticklabels=xyticklabels)
+                yticklabels=xyticklabels, ax=ax)
 
     # Remove colors from totals
-    quadmesh = ax.findobj(QuadMesh)[0]
-    facecolors = quadmesh.get_facecolors()
-    # make colors of the last column white
-    facecolors[np.arange(cf.shape[0] - 1, cf.size, cf.shape[0])] = np.array([0, 0, 0, 0.05])
-    facecolors[np.arange(cf.size - cf.shape[0], cf.size)] = np.array([0, 0, 0, 0.05])
-    quadmesh.set_facecolors = facecolors
+    if sum_stats:
+        quadmesh = ax.findobj(QuadMesh)[0]
+        quadmesh.update_scalarmappable()
+        facecolors = quadmesh.get_facecolors().copy()
+        # make colors of the last column and the last row light grey
+        facecolors[np.arange(cf.shape[0] - 1, cf.size, cf.shape[0])] = np.array([0.95, 0.95, 0.95, 1])
+        facecolors[np.arange(cf.size - cf.shape[0], cf.size)] = np.array([0.95, 0.95, 0.95, 1])
+        # Detach the colormap so the colors are not recomputed from the data at draw time
+        quadmesh.set_array(None)
+        quadmesh.set_facecolors(facecolors)
 
     if xyplotlabels:
         plt.ylabel('Observed values', fontsize=11)

@@ -57,7 +57,6 @@ df_, outliers = remove_outliers(df_imp, num_vars+cat_vars)
 
 # DIMENSIONALITY REDUCTION
 print('--- DIMENSIONALITY REDUCTION ---')
-df_ = df_.reset_index(drop=True)
 from clearn.dimensionality_reduction import DimensionalityReduction
 
 # Instantiate class, project to a lower dimensionality with optimal number of components

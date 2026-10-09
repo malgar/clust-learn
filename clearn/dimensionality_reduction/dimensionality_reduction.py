@@ -124,6 +124,10 @@ class DimensionalityReduction:
             self.cat_trans_ = self._transform_cat(self.df[self.cat_vars], n_components_cat)
             trans = pd.concat([trans, self.cat_trans_], axis=1)
 
+        # Numerical and categorical components are aligned on the input index, so no rows can be added or lost
+        if not trans.index.equals(self.df.index):
+            raise RuntimeError('The transformed data does not match the rows of the input data.')
+
         idx_positions = np.maximum(len(str(trans.shape[1])), 2)
         trans.columns = [f'dim_{str(i+1).zfill(idx_positions)}' for i in range(trans.shape[1])]
         self.n_components_ = 0
@@ -162,7 +166,8 @@ class DimensionalityReduction:
 
         idx_positions = np.maximum(2, len(str(n_components_num)))
         trans = pd.DataFrame(self.num_model.transform(sc.fit_transform(df)),
-                             columns=[f'dim_{str(i+1).zfill(idx_positions)}' for i in range(n_components_num)])
+                             columns=[f'dim_{str(i+1).zfill(idx_positions)}' for i in range(n_components_num)],
+                             index=df.index)
         
         # sort by explained variance
         trans = trans[pd.DataFrame(data={'pc': trans.columns, 'explained_var': trans.var().values})
@@ -190,6 +195,7 @@ class DimensionalityReduction:
 
         trans = self.cat_model.transform(df.astype(str))
         trans = trans[trans.columns[:n_components_cat]]
+        trans.index = df.index
         idx_positions = np.maximum(2, len(str(n_components_cat)))
         trans.columns = [f'dim_{str(i+1).zfill(idx_positions)}' for i in range(n_components_cat)]
         return trans

@@ -107,7 +107,6 @@ cat_vars = ["region", "segment", ...]   # categorical column names
 # 1. Preprocessing - impute missing values, then remove multivariate outliers
 df = impute_missing_values(df, num_vars=num_vars, cat_vars=cat_vars)
 df, _ = remove_outliers(df, num_vars + cat_vars)
-df = df.reset_index(drop=True)
 
 # 2. Dimensionality reduction - SPCA (numerical) + MCA (categorical)
 dr = DimensionalityReduction(df, num_vars=num_vars, cat_vars=cat_vars,

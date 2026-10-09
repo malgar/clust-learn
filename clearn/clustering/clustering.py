@@ -44,7 +44,7 @@ class Clustering:
         self.df = df.copy()
         if normalize:
             mms = MinMaxScaler()
-            self.df = pd.DataFrame(mms.fit_transform(df), columns=df.columns)
+            self.df = pd.DataFrame(mms.fit_transform(df), columns=df.columns, index=df.index)
 
         self.dimensions_ = list(df.columns)
 
@@ -245,11 +245,13 @@ class Clustering:
 
         if not isinstance(statistics, list):
             statistics = [statistics]
+        # Weights are positional, so they are looked up by row label through a Series with the same index as df_ext
+        weights = pd.Series(self.weights_, index=df_ext.index) if self.weights_ is not None else None
         if 'wmean' in statistics:
-            def wmean(x): return weighted_mean(x, self.weights_[x.index])
+            def wmean(x): return weighted_mean(x, weights[x.index].values)
             statistics[statistics.index('wmean')] = wmean
         if 'wstd' in statistics:
-            def wstd(x): return weighted_std(x, self.weights_[x.index])
+            def wstd(x): return weighted_std(x, weights[x.index].values)
             statistics[statistics.index('wstd')] = wstd
 
         res = df_ext[df_ext['cluster'].isin(cluster_filter)].groupby('cluster').agg(
@@ -287,10 +289,12 @@ class Clustering:
         freq : `pandas.DataFrame`
             DataFrame with a cluster description based on the passed categorical variable.
         """
-        freq = pd.crosstab(index=self.df['cluster_cat'], columns=cat_array, rownames=['Clusters'], colnames=[cat_name])
+        # Observations are matched by position, not by index label
+        clusters = self.df['cluster_cat'].values
+        cat_values = np.asarray(cat_array)
+        freq = pd.crosstab(index=clusters, columns=cat_values, rownames=['Clusters'], colnames=[cat_name])
         if use_weights:
-            wcrosstab_df = pd.DataFrame(data=[self.df['cluster_cat'], cat_array, self.weights_],
-                                        index=['Clusters', cat_name, 'weights']).transpose()
+            wcrosstab_df = pd.DataFrame(data={'Clusters': clusters, cat_name: cat_values, 'weights': self.weights_})
             freq = wcrosstab_df.groupby(['Clusters', cat_name]).agg({'weights': 'sum'}).reset_index()\
                 .pivot(index='Clusters', columns=cat_name, values='weights').fillna(0)
 
