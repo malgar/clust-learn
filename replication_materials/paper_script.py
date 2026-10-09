@@ -54,6 +54,8 @@ plot_imputation_distribution_assessment(df.loc[df_imp.index], df_imp, ['COMPICT'
 
 # Remove outliers
 df_, outliers = remove_outliers(df_imp, num_vars+cat_vars)
+print('Records after missing value imputation: ', len(df_imp))
+print('Records after removing outliers: ', len(df_))
 
 # DIMENSIONALITY REDUCTION
 print('--- DIMENSIONALITY REDUCTION ---')

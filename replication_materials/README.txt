@@ -1,12 +1,11 @@
 Replication code
 ===================================================
 
-These files are drop-in replacements for the repository's `replication_materials/`.
-They reproduce the illustrative example in the code paper end-to-end.
+These files reproduce the illustrative example in the code paper end-to-end.
 
 Requirements
 ------------
-Python 3.9-3.11. Use the pinned `requirements.txt`:
+Python 3.10. Use the pinned `requirements.txt`:
 
     pip install -r requirements.txt
 
@@ -28,9 +27,10 @@ https://github.com/malgar/clust-learn/tree/master/notebooks/data
 
 Reproducibility note
 --------------------
-With the pinned environment above and the fixed random seeds in the script, the run
-is deterministic. Representative outputs: 12.0% missing values imputed to a complete
-set of 4,556 records; 264 outliers removed (4,292 retained); 15 derived components
-(14 numerical via SPCA + 1 categorical via MCA); k-means with k=8 selected by the
-elbow method; XGBoost cluster classifier with ~0.80 test accuracy and ESCS as the
-dominant SHAP predictor. Exact figures depend on the pinned library versions.
+The results reported in the paper were produced in the Code Ocean capsule
+(Python 3.10, with the package versions pinned in requirements.txt):
+12.0% missing values imputed to a complete set of 4,556 records; 4,242 records
+after outlier removal; 16 derived components (15 numerical via SPCA + 1
+categorical via MCA); k-means with k=6 selected by the elbow method; XGBoost
+cluster classifier with 83.51% test accuracy and ESCS as the dominant SHAP
+predictor. Results may differ with other Python or library versions.
