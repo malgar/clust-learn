@@ -22,7 +22,8 @@
 	- [Quickstart](#user-content-quickstart)
 5. [Version and license information](#user-content-license)
 6. [Bug reports and future work](#user-content-future)
-7. [User guide & API](#user-content-api)
+7. [Verifying the manuscript example](#user-content-verification)
+8. [User guide & API](#user-content-api)
 	1. [Data processing](#user-content-module-preprocessing)
 		1. [Data imputation](#user-content-module-preprocessing-imputation)
 		2. [Outliers](#user-content-module-preprocessing-outliers)
@@ -35,7 +36,7 @@
 	4. [Classifier](#user-content-module-classifier)
 		- [Classifier class](#Classifier_class)
 		- [Class methods](#Classifier_class_methods)
-8. [Citing](#user-content-citing)
+9. [Citing](#user-content-citing)
 
 <h2 id="user-content-introduction">
 1. Introduction
@@ -144,8 +145,25 @@ Each module is independent and can be used on its own; see the [User guide & API
 
 Please report bugs and feature requests through creating a new issue [here](https://github.com/malgar/clust-learn/issues).
 
+<h2 id="user-content-verification">
+7. Verifying the manuscript example
+</h2>
+
+The published [Code Ocean capsule](https://codeocean.com/capsule/0154254/tree) provides the computational environment, replication script, and recorded reference outputs for the manuscript example. The same script is available in this repository at [`replication_materials/paper_script.py`](replication_materials/paper_script.py).
+
+To check the package after changes, run the replication script with the updated package code in the capsule's computational environment. Compare the outputs at each stage with the recorded reference results and confirm that the complete workflow runs successfully.
+
+| Stage | Expected result |
+|---|---|
+| Preprocessing | 4,242 observations retained after missing-value handling and outlier removal |
+| Dimensionality reduction | 16 retained components |
+| Clustering | A six-cluster k-means solution selected using inertia and the elbow method |
+| Cluster interpretation | Surrogate classifier accuracy of 0.84 and macro-F1 of 0.83 on the classifier's held-out set, at the precision reported in the manuscript |
+
+When checking code changes in a local environment, first run the manuscript example with the official release associated with the paper and save its intermediate and final outputs. Then rerun the example with the modified code, keeping the input data, dependency versions, random seeds, and execution settings the same. Compare the outputs from both runs, including the reference quantities listed above, and investigate unexpected differences. When comparing numerical outputs, allow for floating-point precision. When comparing cluster assignments, account for equivalent partitions whose cluster labels have been permuted.
+
 <h2 id="user-content-api">
-7. User guide & API
+8. User guide & API
 </h2>
 
 `clust-learn` is organized into four modules:
@@ -745,7 +763,7 @@ This function makes a pretty plot of an sklearn Confusion Matrix cf using a Seab
 Plots ROC curve for every class.
 
 <h2 id="user-content-citing">
-8. Citing
+9. Citing
 </h2>
 
 Alvarez-Garcia, M., Ibar-Alonso, R., Arenas-Parra, M. (2024). A comprehensive framework for explainable cluster analysis. _Information Sciences, 663_ , 120282, https://doi.org/10.1016/j.ins.2024.120282
